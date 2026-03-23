@@ -984,6 +984,54 @@ export default function App() {
   const [emailData, setEmailData] = useState({ firstName: "", email: "", company: "" });
   const [results, setResults] = useState(null);
 
+  // Session ID to track partial submissions
+  const [sessionId] = useState(() => "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
+
+  // Google Sheets webhook URL
+  const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyfnnJ50kE0rAB0sWFtuAgw_fiH32ooUmnMGYdIag_gaa_xuyBGfysEBt9xSI56HuVZHw/exec";
+
+  // Send data to Google Sheet (updates same row using session_id)
+  const sendToSheet = (extraData = {}) => {
+    const q = QUESTIONS[currentQ];
+    const val = answers[q?.id];
+
+    // Map answers to sheet columns
+    const payload = {
+      session_id: sessionId,
+      timestamp: new Date().toISOString(),
+      completed: false,
+    };
+
+    // Add all answered questions
+    if (answers.challenge) payload.q1_challenge = answers.challenge;
+    if (answers.tried) payload.q2_tried = answers.tried;
+    if (answers.lead_sources) payload.q3_lead_sources = Array.isArray(answers.lead_sources) ? answers.lead_sources.join(", ") : answers.lead_sources;
+    if (answers.lead_volume !== undefined) payload.q4_lead_volume = QUESTIONS.find(q => q.id === "lead_volume")?.options[answers.lead_volume] || "";
+    if (answers.cpl_cac !== undefined) payload.q5_cpl_cac = QUESTIONS.find(q => q.id === "cpl_cac")?.options[answers.cpl_cac] || "";
+    if (answers.cpl_cac_input_0) payload.q5_cpl_value = answers.cpl_cac_input_0;
+    if (answers.cpl_cac_input_1) payload.q5_cac_value = answers.cpl_cac_input_1;
+    if (answers.who_sells !== undefined) payload.q6_who_sells = QUESTIONS.find(q => q.id === "who_sells")?.options[answers.who_sells] || "";
+    if (answers.follow_up_speed !== undefined) payload.q7_follow_up_speed = QUESTIONS.find(q => q.id === "follow_up_speed")?.options[answers.follow_up_speed] || "";
+    if (answers.sales_process !== undefined) payload.q8_sales_process = QUESTIONS.find(q => q.id === "sales_process")?.options[answers.sales_process] || "";
+    if (answers.conversion_rate !== undefined) payload.q9_conversion_rate = QUESTIONS.find(q => q.id === "conversion_rate")?.options[answers.conversion_rate] || "";
+    if (answers.conversion_rate_input_0) payload.q9_conversion_value = answers.conversion_rate_input_0;
+    if (answers.deal_falloff) payload.q10_deal_falloff = Array.isArray(answers.deal_falloff) ? answers.deal_falloff.join(", ") : answers.deal_falloff;
+    if (answers.crm !== undefined) payload.q11_crm = QUESTIONS.find(q => q.id === "crm")?.options[answers.crm] || "";
+    if (answers.business_type) payload.q12_business_type = answers.business_type;
+    if (answers.years !== undefined) payload.q13_years = QUESTIONS.find(q => q.id === "years")?.options[answers.years] || "";
+    if (answers.revenue !== undefined) payload.q14_revenue = QUESTIONS.find(q => q.id === "revenue")?.options[answers.revenue] || "";
+    if (answers.deal_size !== undefined) payload.q15_deal_size = QUESTIONS.find(q => q.id === "deal_size")?.options[answers.deal_size] || "";
+
+    // Merge any extra data (email, score, completed flag)
+    Object.assign(payload, extraData);
+
+    // Send in background — don't block the UI
+    fetch(WEBHOOK_URL, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }).catch(() => {}); // Silently fail if network issue
+  };
+
   const canProceed = () => {
     const q = QUESTIONS[currentQ];
     const val = answers[q.id];
@@ -994,6 +1042,8 @@ export default function App() {
   };
 
   const handleNext = () => {
+    // Send partial data to sheet after each question
+    sendToSheet();
     if (currentQ < QUESTIONS.length - 1) {
       setCurrentQ(currentQ + 1);
     } else {
@@ -1043,6 +1093,16 @@ export default function App() {
 
     setResults({ score: totalScore, maxScore, leaks: leakScores, revenue, benchmarks });
     setScreen("results");
+
+    // Send final data with email, score, and completed flag
+    const displayScore = Math.round((totalScore / maxScore) * 100);
+    sendToSheet({
+      first_name: emailData.firstName,
+      email: emailData.email,
+      company: emailData.company,
+      score: displayScore,
+      completed: true,
+    });
   };
 
   return (
@@ -1060,23 +1120,21 @@ export default function App() {
         ::selection { background: ${C.orangeBg}; color: ${C.navy}; }
       `}</style>
 
-      {/* Site Header */}
-      <nav style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        padding: "0.5rem 4rem",
-        display: "flex",
-        alignItems: "center",
-        background: "rgba(250, 249, 246, 0.92)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(51, 65, 85, 0.08)",
-      }}>
-        <a href="https://parkridgeadvisory.com" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-          <img src="/logo-horizontal.svg" alt="Parkridge Advisory" style={{ height: 52, width: "auto", display: "block" }} />
-        </a>
-      </nav>
+      {/* Home link - update href when website is live */}
+      {screen !== "intro" && (
+        <a
+          href="/"
+          style={{
+            position: "fixed", top: 12, left: 24, zIndex: 60,
+            fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: C.silver,
+            textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
+            transition: "color 0.2s",
+          }}
+          onMouseEnter={(e) => e.target.style.color = C.navy}
+          onMouseLeave={(e) => e.target.style.color = C.silver}
+        >← Parkridge Advisory</a>
+      )}
 
       {screen === "intro" && <Intro onStart={() => setScreen("questions")} />}
 

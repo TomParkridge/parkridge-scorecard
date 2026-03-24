@@ -961,8 +961,10 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               No pitch — just clarity.
             </p>
             <a
-              href="#"
-              onClick={(e) => { e.preventDefault(); analytics.callBooked('scorecard'); }}
+              href="https://calendar.app.google/ShkNPPFHf1WdNFqYA"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => analytics.callBooked('scorecard')}
               style={{
                 display: "inline-block", padding: "16px 40px", fontSize: 14,
                 fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",

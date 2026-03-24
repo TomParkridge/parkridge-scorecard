@@ -919,57 +919,138 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks }) {
 // INTRO SCREEN
 // ============================================================
 function Intro({ onStart }) {
+  const ctaStyle = {
+    display: "inline-flex", alignItems: "center", gap: 10,
+    padding: "16px 40px", background: C.navy, color: C.white,
+    fontSize: 15, fontWeight: 500, letterSpacing: "0.06em",
+    textTransform: "uppercase", border: "none", borderRadius: 4,
+    cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.3s",
+  };
   return (
-    <div style={{
-      minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center",
-      alignItems: "center", padding: "60px 24px", textAlign: "center",
-      animation: "fadeIn 0.6s ease",
-    }}>
-      {/* Add <img src="/parkridge-logo.png" alt="Parkridge Advisory" style={{ height: 40, marginBottom: 40 }} /> when deploying */}
-      <div style={{
-        fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: C.silver,
-        marginBottom: 32, textTransform: "uppercase",
-      }}>Parkridge Advisory</div>
-      <h1 style={{
-        fontSize: "clamp(1.8rem, 4vw, 2.6rem)", fontWeight: 700, color: C.navy,
-        lineHeight: 1.2, marginBottom: 20, maxWidth: 500,
-      }}>Let's find where your revenue is leaking</h1>
-      <p style={{
-        fontSize: 16, color: C.navyMuted, fontWeight: 300, lineHeight: 1.7,
-        maxWidth: 440, marginBottom: 12,
-      }}>This 5-minute assessment will show you:</p>
-      <div style={{
-        display: "flex", flexDirection: "column", gap: 8, marginBottom: 40,
-        textAlign: "left", maxWidth: 380,
+    <div style={{ minHeight: "100vh", background: "#FAF8F5" }}>
+
+      {/* Header */}
+      <header style={{
+        padding: "20px 40px", display: "flex", alignItems: "center",
+        justifyContent: "center", borderBottom: `1px solid rgba(51,65,85,0.07)`,
+        background: C.white,
       }}>
-        {[
-          "Where your pipeline is breaking",
-          "How much revenue it's costing you",
-          "How you compare to top-performing businesses",
-        ].map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 15, color: C.navyLight, fontWeight: 400 }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: "50%", background: C.orange, flexShrink: 0,
-            }} />
-            {item}
-          </div>
-        ))}
+        <svg height="38" viewBox="0 0 1460 403" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "auto" }}>
+          <path d="M46 289L155.5 108L248.5 256" stroke="#9AA5B1" strokeWidth="18" strokeMiterlimit="11.4737" strokeLinecap="square"/>
+          <path d="M186.5 256L288 67L360.5 201.5" stroke="#334155" strokeWidth="18" strokeMiterlimit="11.4737" strokeLinecap="square" strokeLinejoin="round"/>
+          <circle cx="288" cy="72.5" r="15.5" fill="#FF6B2B" stroke="white" strokeWidth="4"/>
+          <path d="M459.04 272V174H495.84C505.547 174 513.713 175.4 520.34 178.2C527.06 180.907 532.147 184.827 535.6 189.96C539.053 195.093 540.78 201.16 540.78 208.16C540.78 215.16 539.053 221.227 535.6 226.36C532.147 231.4 527.06 235.32 520.34 238.12C513.713 240.827 505.547 242.18 495.84 242.18H465.34L473.04 234.34V272H459.04ZM473.04 235.74L465.34 227.48H496.26C506.153 227.48 513.62 225.333 518.66 221.04C523.7 216.747 526.22 211.053 526.22 203.96C526.22 196.773 523.7 191.08 518.66 186.88C513.62 182.587 506.153 180.44 496.26 180.44H465.34L473.04 171.9V235.74Z" fill="#334155"/>
+          <path d="M530.86 272L575.24 174H589.1L633.62 272H618.92L579.3 181.84H584.9L545.28 272H530.86ZM549.76 247.5L553.54 236.3H608.7L612.76 247.5H549.76Z" fill="#334155"/>
+          <path d="M665.039 272V174H703.259C711.846 174 719.172 175.353 725.239 178.06C731.306 180.767 735.972 184.687 739.239 189.82C742.506 194.953 744.139 201.067 744.139 208.16C744.139 215.253 742.506 221.367 739.239 226.5C735.972 231.54 731.306 235.413 725.239 238.12C719.172 240.827 711.846 242.18 703.259 242.18H672.739L679.039 235.74V272H665.039ZM730.559 272L705.639 236.44H720.619L745.819 272H730.559ZM679.039 237.14L672.739 230.28H702.839C711.799 230.28 718.566 228.367 723.139 224.54C727.806 220.62 730.139 215.16 730.139 208.16C730.139 201.16 727.806 195.747 723.139 191.92C718.566 188.093 711.799 186.18 702.839 186.18H672.739L679.039 179.18V237.14Z" fill="#334155"/>
+          <path d="M795.878 248.34L795.178 231.26L850.758 174H866.718L823.738 219.36L815.898 228.04L795.878 248.34ZM783.558 272V174H797.558V272H783.558ZM852.998 272L812.818 225.24L822.198 214.88L869.378 272H852.998Z" fill="#334155"/>
+          <path d="M1027.7 272V174H1041.7V272H1027.7ZM1085.04 272V174H1126.34C1136.79 174 1145.99 176.053 1153.92 180.16C1161.95 184.267 1168.15 190.007 1172.54 197.38C1177.02 204.753 1179.26 213.293 1179.26 223C1179.26 232.707 1177.02 241.247 1172.54 248.62C1168.15 255.993 1161.95 261.733 1153.92 265.84C1145.99 269.947 1136.79 272 1126.34 272H1085.04ZM1099.04 259.82H1125.5C1133.62 259.82 1140.62 258.28 1146.5 255.2C1152.47 252.12 1157.09 247.827 1160.36 242.32C1163.63 236.72 1165.26 230.28 1165.26 223C1165.26 215.627 1163.63 209.187 1160.36 203.68C1157.09 198.173 1152.47 193.88 1146.5 190.8C1140.62 187.72 1133.62 186.18 1125.5 186.18H1099.04V259.82ZM1258.94 273.12C1251.38 273.12 1244.43 271.907 1238.08 269.48C1231.74 266.96 1226.23 263.46 1221.56 258.98C1216.9 254.407 1213.26 249.087 1210.64 243.02C1208.03 236.953 1206.72 230.28 1206.72 223C1206.72 215.72 1208.03 209.047 1210.64 202.98C1213.26 196.913 1216.9 191.64 1221.56 187.16C1226.32 182.587 1231.88 179.087 1238.22 176.66C1244.57 174.14 1251.57 172.88 1259.22 172.88C1266.97 172.88 1274.06 174.14 1280.5 176.66C1286.94 179.18 1292.4 182.96 1296.88 188L1288.2 196.68C1284.19 192.76 1279.8 189.913 1275.04 188.14C1270.38 186.273 1265.29 185.34 1259.78 185.34C1254.18 185.34 1248.96 186.273 1244.1 188.14C1239.34 190.007 1235.19 192.62 1231.64 195.98C1228.19 199.34 1225.48 203.353 1223.52 208.02C1221.66 212.593 1220.72 217.587 1220.72 223C1220.72 228.32 1221.66 233.313 1223.52 237.98C1225.48 242.553 1228.19 246.567 1231.64 250.02C1235.19 253.38 1239.34 255.993 1244.1 257.86C1248.86 259.727 1254.04 260.66 1259.64 260.66C1264.87 260.66 1269.86 259.867 1274.62 258.28C1279.48 256.6 1283.96 253.847 1288.06 250.02L1296.04 260.66C1291.19 264.767 1285.5 267.893 1278.96 270.04C1272.52 272.093 1265.85 273.12 1258.94 273.12ZM1282.6 258.84V222.44H1296.04V260.66L1282.6 258.84ZM1349.59 216.28H1399.99V228.18H1349.59V216.28ZM1350.85 259.82H1407.97V272H1336.85V174H1406.01V186.18H1350.85V259.82Z" fill="#334155"/>
+        </svg>
+      </header>
+
+      {/* Hero */}
+      <section style={{ textAlign: "center", padding: "80px 24px 60px", maxWidth: 720, margin: "0 auto" }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "8px 20px", background: C.white,
+          border: `1px solid rgba(51,65,85,0.12)`, borderRadius: 100,
+          fontSize: 12, fontWeight: 500, letterSpacing: "0.12em",
+          textTransform: "uppercase", color: C.navyLight, marginBottom: 32,
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.orange, flexShrink: 0 }} />
+          The Pipeline Scorecard
+        </div>
+
+        <h1 style={{
+          fontFamily: "'Cormorant Garamond', serif", fontWeight: 400,
+          fontSize: "clamp(2.5rem, 5.5vw, 3.5rem)", lineHeight: 1.15,
+          color: C.navy, marginBottom: 20, letterSpacing: "-0.01em",
+        }}>
+          Let's find where your<br />revenue is <em style={{ fontStyle: "italic", color: C.orange }}>leaking</em>
+        </h1>
+
+        <p style={{
+          fontSize: 17, color: C.navyMuted, lineHeight: 1.65,
+          maxWidth: 480, margin: "0 auto 40px",
+        }}>
+          Answer a few quick questions about your sales pipeline and get a personalized diagnostic showing exactly where you're losing deals — and revenue.
+        </p>
+
+        <button onClick={onStart} style={ctaStyle}
+          onMouseEnter={(e) => { e.currentTarget.style.background = C.orange; e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = C.navy; e.currentTarget.style.transform = "translateY(0)"; }}
+        >
+          Start Assessment
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <span style={{ display: "block", marginTop: 16, fontSize: 13, color: C.silver }}>Takes less than 5 minutes</span>
+      </section>
+
+      {/* Divider */}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "0 24px", maxWidth: 480, margin: "0 auto" }}>
+        <div style={{ flex: 1, height: 1, background: "rgba(51,65,85,0.1)" }} />
+        <div style={{ width: 6, height: 6, background: C.orange, transform: "rotate(45deg)", flexShrink: 0 }} />
+        <div style={{ flex: 1, height: 1, background: "rgba(51,65,85,0.1)" }} />
       </div>
-      <button
-        onClick={onStart}
-        style={{
-          padding: "16px 48px", fontSize: 14, fontWeight: 600,
-          letterSpacing: "0.08em", textTransform: "uppercase",
-          background: C.orange, color: C.white, border: "none",
-          borderRadius: 4, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-          transition: "all 0.3s",
-        }}
-        onMouseEnter={(e) => { e.target.style.background = C.orangeDark; e.target.style.transform = "translateY(-2px)"; }}
-        onMouseLeave={(e) => { e.target.style.background = C.orange; e.target.style.transform = "translateY(0)"; }}
-      >
-        Start Assessment
-      </button>
-      <div style={{ fontSize: 12, color: C.silver, marginTop: 16 }}>Takes less than 5 minutes</div>
+
+      {/* What You'll Get */}
+      <section style={{ padding: "60px 24px 80px", maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.15em", textTransform: "uppercase", color: C.navyLight, marginBottom: 12 }}>
+          What You'll Get
+        </div>
+        <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400, fontSize: 28, color: C.navy, marginBottom: 36 }}>
+          Your personalized diagnostic
+        </h2>
+        <div style={{ background: C.white, border: `1px solid rgba(51,65,85,0.07)`, borderRadius: 8, padding: "48px 40px", textAlign: "left" }}>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 18 }}>
+            {[
+              { title: "Pipeline Health Score", desc: "a single number showing your overall pipeline strength at a glance" },
+              { title: "Revenue Left on the Table", desc: "see exactly where deals are slipping away and how much it's costing you" },
+              { title: "Benchmark Comparison", desc: "understand how your pipeline stacks up against top-performing businesses" },
+            ].map((item, i) => (
+              <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 14, fontSize: 15, lineHeight: 1.55, color: C.navy }}>
+                <span style={{
+                  flexShrink: 0, marginTop: 2, width: 20, height: 20,
+                  borderRadius: "50%", background: C.orangeBg,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                    <path d="M2.5 6.5L5 9L9.5 3.5" stroke={C.orange} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+                <span><strong>{item.title}</strong> — {item.desc}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Bottom CTA */}
+      <div style={{ textAlign: "center", padding: "0 24px 80px" }}>
+        <button onClick={onStart} style={ctaStyle}
+          onMouseEnter={(e) => { e.currentTarget.style.background = C.orange; e.currentTarget.style.transform = "translateY(-1px)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = C.navy; e.currentTarget.style.transform = "translateY(0)"; }}
+        >
+          Start the Scorecard
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <span style={{ display: "block", marginTop: 16, fontSize: 13, color: C.silver }}>Free · No email required to start</span>
+        <p style={{ marginTop: 20, fontSize: 14, color: C.navyMuted, fontStyle: "italic" }}>
+          Once you finish, you can book a free strategy call to walk through your results together.
+        </p>
+      </div>
+
+      {/* Footer */}
+      <footer style={{
+        textAlign: "center", padding: "32px 24px",
+        borderTop: `1px solid rgba(51,65,85,0.07)`,
+        fontSize: 12, color: C.silver, letterSpacing: "0.03em",
+      }}>
+        © 2026 Parkridge Advisory. All rights reserved.
+      </footer>
     </div>
   );
 }
@@ -1106,16 +1187,45 @@ export default function App() {
     });
 
     // Send email report to lead and Tom
+    let diagnosisText = "";
+    let diagColor = "#f97316";
+    if (displayScore <= 40) { diagnosisText = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = "#ef4444"; }
+    else if (displayScore <= 60) { diagnosisText = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = "#f97316"; }
+    else if (displayScore <= 80) { diagnosisText = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
+    else { diagnosisText = "Strong — Your pipeline is in good shape. Fine-tuning could take you to the next level."; diagColor = "#22c55e"; }
+
+    const fmt = (n) => n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;
+
+    const benchmarksHtml = benchmarks.length > 0
+      ? benchmarks.map((b, i) => `
+          <tr style="border-bottom:${i < benchmarks.length - 1 ? "1px solid #e2e8f0" : "none"}">
+            <td style="padding:14px 20px;">
+              <div style="font-size:12px;color:#94a3b8;font-weight:500;margin-bottom:2px;">${b.label}</div>
+              <div style="font-size:14px;color:#334155;font-weight:500;">You: ${b.yours}</div>
+            </td>
+            <td style="padding:14px 20px;text-align:right;">
+              <div style="font-size:12px;color:#22c55e;font-weight:500;margin-bottom:2px;">Top performers</div>
+              <div style="font-size:14px;color:#22c55e;font-weight:600;">${b.best}</div>
+            </td>
+          </tr>`).join("")
+      : "";
+
     const emailParams = {
       to_name: emailData.firstName,
       to_email: emailData.email,
       company: emailData.company || "N/A",
       score: displayScore,
-      top_leak_1: leakScores[0]?.title || "N/A",
-      top_leak_2: leakScores[1]?.title || "N/A",
-      top_leak_3: leakScores[2]?.title || "N/A",
-      revenue_low: revenue?.low ? `$${revenue.low.toLocaleString()}` : "N/A",
-      revenue_high: revenue?.high ? `$${revenue.high.toLocaleString()}` : "N/A",
+      diagnosis: diagnosisText,
+      diag_color: diagColor,
+      top_leak_1: leakScores[0]?.title || "",
+      top_leak_1_desc: leakScores[0]?.desc || "",
+      top_leak_2: leakScores[1]?.title || "",
+      top_leak_2_desc: leakScores[1]?.desc || "",
+      top_leak_3: leakScores[2]?.title || "",
+      top_leak_3_desc: leakScores[2]?.desc || "",
+      revenue_low: revenue?.low ? fmt(revenue.low) : "N/A",
+      revenue_high: revenue?.high ? fmt(revenue.high) : "N/A",
+      benchmarks_html: benchmarksHtml,
     };
 
     const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;

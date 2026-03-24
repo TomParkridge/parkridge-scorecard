@@ -972,13 +972,13 @@ function Intro({ onStart }) {
           borderRadius: 8, padding: "28px 32px",
         }}>
           {[
-            "Where your pipeline is breaking",
-            "How much revenue it's costing you",
-            "How you compare to top-performing businesses",
+            { title: "Pipeline Health Score", desc: "a single number showing your overall pipeline strength at a glance" },
+            { title: "Revenue Left on the Table", desc: "see exactly where deals are slipping away and how much it's costing you" },
+            { title: "Benchmark Comparison", desc: "understand how your pipeline stacks up against top-performing businesses" },
           ].map((item, i) => (
-            <li key={i} style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 16, color: C.navy, lineHeight: 1.5 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.orange, flexShrink: 0 }} />
-              {item}
+            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, fontSize: 15, color: C.navy, lineHeight: 1.55 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.orange, flexShrink: 0, marginTop: 5 }} />
+              <span><strong>{item.title}</strong> — {item.desc}</span>
             </li>
           ))}
         </ul>

@@ -1207,19 +1207,10 @@ export default function App() {
 
     console.log("[EmailJS] Sending with:", { serviceId, templateId, publicKey: publicKey ? "set" : "MISSING" });
 
-    // Email to the lead
+    // Email to the lead (Tom receives a copy via BCC in EmailJS template settings)
     emailjs.send(serviceId, templateId, emailParams, publicKey)
-      .then(() => console.log("[EmailJS] Lead email sent OK"))
-      .catch((err) => console.error("[EmailJS] Lead email failed:", err));
-
-    // Email to Tom
-    emailjs.send(serviceId, templateId, {
-      ...emailParams,
-      to_name: "Tom",
-      to_email: "tom@parkridgeadvisory.com",
-    }, publicKey)
-      .then(() => console.log("[EmailJS] Tom email sent OK"))
-      .catch((err) => console.error("[EmailJS] Tom email failed:", err));
+      .then(() => console.log("[EmailJS] Email sent OK"))
+      .catch((err) => console.error("[EmailJS] Email failed:", err));
   };
 
   return (

@@ -1047,7 +1047,7 @@ export default function App() {
   const [sessionId] = useState(() => "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
 
   // Google Sheets webhook URL
-  const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyfnnJ50kE0rAB0sWFtuAgw_fiH32ooUmnMGYdIag_gaa_xuyBGfysEBt9xSI56HuVZHw/exec";
+  const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby8qdZmUuZfouBH-4Uloc3O5A4TxP7batJxggqQRAypROG77LysGPteo3HXV556J4croQ/exec";
 
   // Send data to Google Sheet (updates same row using session_id)
   const sendToSheet = (extraData = {}) => {

@@ -766,6 +766,9 @@ function ReportSummary({ ra }) {
     <div style={{ marginBottom: 40, animation: "fadeIn 0.5s ease" }}>
       <h3 style={{ fontSize: 18, fontWeight: 600, color: C.navy, marginBottom: 20 }}>Answers Summary</h3>
       <Section title="Company Profile" rows={[
+        ["Name", ra.name],
+        ["Email", ra.email],
+        ["Company", ra.company],
         ["Business", ra.businessType],
         ["Years in Business", ra.years],
         ["Annual Revenue", ra.revenue],
@@ -829,6 +832,13 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
       minHeight: "100vh", padding: "80px 24px 60px", maxWidth: 700, margin: "0 auto",
       animation: "fadeIn 0.5s ease",
     }}>
+      {/* Logo */}
+      <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <a href="https://parkridgeadvisory.com" target="_blank" rel="noopener noreferrer">
+          <img src="/logo-horizontal.svg" alt="Parkridge Advisory" style={{ height: 32, width: "auto" }} />
+        </a>
+      </div>
+
       {/* Score */}
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{
@@ -1100,6 +1110,7 @@ export default function App() {
       })).filter(b => b.label),
       reportAnswers: {
         name: p.get('nm') || '',
+        email: p.get('em') || '',
         company: p.get('co') || '',
         businessType: p.get('biz') || '',
         years: p.get('yrs') || '',
@@ -1266,6 +1277,7 @@ export default function App() {
     reportUrl.searchParams.set('score', displayScore);
     // Lead info
     reportUrl.searchParams.set('nm', emailData.firstName);
+    reportUrl.searchParams.set('em', emailData.email);
     reportUrl.searchParams.set('co', emailData.company || '');
     // Leaks
     if (leakScores[0]) { reportUrl.searchParams.set('l1', leakScores[0].title); reportUrl.searchParams.set('d1', leakScores[0].desc); }
@@ -1380,20 +1392,16 @@ export default function App() {
       `}</style>
 
       {/* Home link - update href when website is live */}
-      {screen !== "intro" && (
+      {screen === "questions" || screen === "email" ? (
         <a
-          href="/"
-          style={{
-            position: "fixed", top: 12, left: 24, zIndex: 60,
-            fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
-            textTransform: "uppercase", color: C.silver,
-            textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
-            transition: "color 0.2s",
-          }}
-          onMouseEnter={(e) => e.target.style.color = C.navy}
-          onMouseLeave={(e) => e.target.style.color = C.silver}
-        >← Parkridge Advisory</a>
-      )}
+          href="https://parkridgeadvisory.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ position: "fixed", top: 14, left: 20, zIndex: 60, display: "block" }}
+        >
+          <img src="/logo-horizontal.svg" alt="Parkridge Advisory" style={{ height: 28, width: "auto", display: "block" }} />
+        </a>
+      ) : null}
 
       {screen === "intro" && <Intro onStart={() => setScreen("questions")} />}
 

@@ -1015,12 +1015,33 @@ function Intro({ onStart }) {
 // MAIN APP
 // ============================================================
 export default function App() {
-  const [screen, setScreen] = useState("intro");
+  // Load results directly from URL params (shared report links)
+  const [screen, setScreen] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('r') === '1' ? 'results' : 'intro';
+  });
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState({});
   const [inputValues, setInputValues] = useState({});
   const [emailData, setEmailData] = useState({ firstName: "", email: "", company: "" });
-  const [results, setResults] = useState(null);
+  const [results, setResults] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('r') !== '1') return null;
+    return {
+      score: parseInt(p.get('score') || '0'),
+      maxScore: 100,
+      leaks: [
+        { title: p.get('l1') || '', desc: p.get('d1') || '' },
+        { title: p.get('l2') || '', desc: p.get('d2') || '' },
+        { title: p.get('l3') || '', desc: p.get('d3') || '' },
+      ].filter(l => l.title),
+      revenue: {
+        low: parseInt(p.get('rlo') || '0'),
+        high: parseInt(p.get('rhi') || '0'),
+      },
+      benchmarks: [],
+    };
+  });
 
   // Session ID to track partial submissions
   const [sessionId] = useState(() => "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
@@ -1151,12 +1172,24 @@ export default function App() {
       revenue_high: revenue?.high || null,
       company: emailData.company || null,
     });
+    // Build shareable report URL
+    const reportUrl = new URL(window.location.href);
+    reportUrl.search = '';
+    reportUrl.searchParams.set('r', '1');
+    reportUrl.searchParams.set('score', displayScore);
+    if (leakScores[0]) { reportUrl.searchParams.set('l1', leakScores[0].title); reportUrl.searchParams.set('d1', leakScores[0].desc); }
+    if (leakScores[1]) { reportUrl.searchParams.set('l2', leakScores[1].title); reportUrl.searchParams.set('d2', leakScores[1].desc); }
+    if (leakScores[2]) { reportUrl.searchParams.set('l3', leakScores[2].title); reportUrl.searchParams.set('d3', leakScores[2].desc); }
+    if (revenue?.low) reportUrl.searchParams.set('rlo', revenue.low);
+    if (revenue?.high) reportUrl.searchParams.set('rhi', revenue.high);
+
     sendToSheet({
       first_name: emailData.firstName,
       email: emailData.email,
       company: emailData.company,
       score: displayScore,
       completed: true,
+      report_url: reportUrl.toString(),
     });
 
     // Send email report to lead and Tom

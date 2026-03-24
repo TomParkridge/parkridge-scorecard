@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import emailjs from "@emailjs/browser";
 
 // ============================================================
 // PARKRIDGE GROWTH ENGINE SCORECARD
@@ -1103,6 +1104,33 @@ export default function App() {
       score: displayScore,
       completed: true,
     });
+
+    // Send email report to lead and Tom
+    const emailParams = {
+      to_name: emailData.firstName,
+      to_email: emailData.email,
+      company: emailData.company || "N/A",
+      score: displayScore,
+      top_leak_1: leakScores[0]?.title || "N/A",
+      top_leak_2: leakScores[1]?.title || "N/A",
+      top_leak_3: leakScores[2]?.title || "N/A",
+      revenue_low: revenue?.low ? `$${revenue.low.toLocaleString()}` : "N/A",
+      revenue_high: revenue?.high ? `$${revenue.high.toLocaleString()}` : "N/A",
+    };
+
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    // Email to the lead
+    emailjs.send(serviceId, templateId, emailParams, publicKey).catch(() => {});
+
+    // Email to Tom
+    emailjs.send(serviceId, templateId, {
+      ...emailParams,
+      to_name: "Tom",
+      to_email: "tom@parkridgeadvisory.com",
+    }, publicKey).catch(() => {});
   };
 
   return (

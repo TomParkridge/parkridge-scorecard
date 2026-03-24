@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import emailjs from "@emailjs/browser";
+import analytics from "./utils/analytics";
 
 // ============================================================
 // PARKRIDGE GROWTH ENGINE SCORECARD
@@ -895,7 +896,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks }) {
             </p>
             <a
               href="#"
-              onClick={(e) => e.preventDefault()}
+              onClick={(e) => { e.preventDefault(); analytics.callBooked('scorecard'); }}
               style={{
                 display: "inline-block", padding: "16px 40px", fontSize: 14,
                 fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
@@ -983,7 +984,7 @@ function Intro({ onStart }) {
           ))}
         </ul>
 
-        <button onClick={onStart} style={ctaStyle}
+        <button onClick={() => { analytics.scorecardStarted(); onStart(); }} style={ctaStyle}
           onMouseEnter={(e) => { e.currentTarget.style.background = C.orangeDark; e.currentTarget.style.transform = "translateY(-1px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = C.orange; e.currentTarget.style.transform = "translateY(0)"; }}
         >
@@ -1081,6 +1082,7 @@ export default function App() {
   const handleNext = () => {
     // Send partial data to sheet after each question
     sendToSheet();
+    analytics.stepCompleted(currentQ + 1, QUESTIONS[currentQ].id);
     if (currentQ < QUESTIONS.length - 1) {
       setCurrentQ(currentQ + 1);
     } else {
@@ -1133,6 +1135,18 @@ export default function App() {
 
     // Send final data with email, score, and completed flag
     const displayScore = Math.round((totalScore / maxScore) * 100);
+
+    // Identify user and track submission
+    analytics.identifyUser(emailData.email, {
+      $name: emailData.firstName,
+      company: emailData.company,
+    });
+    analytics.scorecardSubmitted(displayScore, {
+      top_leak: leakScores[0]?.title || null,
+      revenue_low: revenue?.low || null,
+      revenue_high: revenue?.high || null,
+      company: emailData.company || null,
+    });
     sendToSheet({
       first_name: emailData.firstName,
       email: emailData.email,

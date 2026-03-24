@@ -1094,7 +1094,11 @@ export default function App() {
     if (currentQ > 0) setCurrentQ(currentQ - 1);
   };
 
+  const submittedRef = useRef(false);
+
   const handleSubmit = () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     // Calculate score
     let totalScore = 0;
     let maxScore = 0;

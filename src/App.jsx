@@ -738,8 +738,61 @@ function EmailCapture({ data, onChange, onSubmit }) {
   );
 }
 
+// Answers summary table for standalone report view
+function ReportSummary({ ra }) {
+  const Section = ({ title, rows }) => {
+    const visible = rows.filter(([, v]) => v);
+    if (!visible.length) return null;
+    return (
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: C.orange, marginBottom: 8 }}>
+          {title}
+        </div>
+        <table style={{ width: "100%", borderCollapse: "collapse", background: C.white, border: `1px solid ${C.mist}`, borderRadius: 6, overflow: "hidden" }}>
+          <tbody>
+            {visible.map(([label, value], i) => (
+              <tr key={i} style={{ borderBottom: i < visible.length - 1 ? `1px solid ${C.cloud}` : "none" }}>
+                <td style={{ padding: "9px 16px", fontSize: 13, color: C.silver, fontWeight: 500, width: "38%", verticalAlign: "top" }}>{label}</td>
+                <td style={{ padding: "9px 16px", fontSize: 13, color: C.navy }}>{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ marginBottom: 40, animation: "fadeIn 0.5s ease" }}>
+      <h3 style={{ fontSize: 18, fontWeight: 600, color: C.navy, marginBottom: 20 }}>Answers Summary</h3>
+      <Section title="Company Profile" rows={[
+        ["Business", ra.businessType],
+        ["Years in Business", ra.years],
+        ["Annual Revenue", ra.revenue],
+        ["Avg Deal Size", ra.dealSize],
+        ["Primary Challenge", ra.challenge],
+      ]} />
+      <Section title="Pipeline & Leads" rows={[
+        ["Lead Sources", ra.leadSources],
+        ["Monthly Lead Volume", ra.leadVolume],
+        ["CPL / CAC Awareness", ra.cplCac],
+        ["Cost per Lead", ra.cplValue ? `$${ra.cplValue}` : ""],
+        ["Cost to Acquire (CAC)", ra.cacValue ? `$${ra.cacValue}` : ""],
+      ]} />
+      <Section title="Sales Process" rows={[
+        ["Who Sells", ra.whoSells],
+        ["Follow-up Speed", ra.followUpSpeed],
+        ["Sales Process", ra.salesProcess],
+        ["Conversion Rate", ra.conversionRate + (ra.conversionValue ? ` — ${ra.conversionValue}` : "")],
+        ["Deals Stalling At", ra.dealFalloff],
+        ["CRM / Pipeline Tool", ra.crm],
+      ]} />
+    </div>
+  );
+}
+
 // Results screen
-function Results({ score, maxScore, revenue, leaks, answers, benchmarks }) {
+function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportAnswers }) {
   const displayScore = Math.round((score / maxScore) * 100);
   const [animatedScore, setAnimatedScore] = useState(0);
   const [showContent, setShowContent] = useState(false);
@@ -798,6 +851,9 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks }) {
 
       {showContent && (
         <>
+          {/* Answers summary — only shown on standalone report links */}
+          {reportAnswers && <ReportSummary ra={reportAnswers} />}
+
           {/* Revenue Leak */}
           <div style={{
             background: C.navyDark, borderRadius: 6, padding: "32px 36px",
@@ -1039,7 +1095,30 @@ export default function App() {
         low: parseInt(p.get('rlo') || '0'),
         high: parseInt(p.get('rhi') || '0'),
       },
-      benchmarks: [],
+      benchmarks: Array.from({ length: 6 }, (_, i) => ({
+        label: p.get(`b${i}l`), yours: p.get(`b${i}y`), best: p.get(`b${i}b`),
+      })).filter(b => b.label),
+      reportAnswers: {
+        name: p.get('nm') || '',
+        company: p.get('co') || '',
+        businessType: p.get('biz') || '',
+        years: p.get('yrs') || '',
+        revenue: p.get('rev') || '',
+        dealSize: p.get('ds') || '',
+        challenge: p.get('ch') || '',
+        leadSources: p.get('lsrc') || '',
+        leadVolume: p.get('lvol') || '',
+        cplCac: p.get('cpl') || '',
+        cplValue: p.get('cplv') || '',
+        cacValue: p.get('cacv') || '',
+        whoSells: p.get('ws') || '',
+        followUpSpeed: p.get('fup') || '',
+        salesProcess: p.get('sp') || '',
+        conversionRate: p.get('cr') || '',
+        conversionValue: p.get('crv') || '',
+        dealFalloff: p.get('df') || '',
+        crm: p.get('crm') || '',
+      },
     };
   });
 
@@ -1173,15 +1252,54 @@ export default function App() {
       company: emailData.company || null,
     });
     // Build shareable report URL
+    const readable = (id) => {
+      const q = QUESTIONS.find(q => q.id === id);
+      const val = answers[id];
+      if (!q || val === undefined) return '';
+      if (q.options) return q.options[val] || '';
+      return val || '';
+    };
+
     const reportUrl = new URL(window.location.href);
     reportUrl.search = '';
     reportUrl.searchParams.set('r', '1');
     reportUrl.searchParams.set('score', displayScore);
+    // Lead info
+    reportUrl.searchParams.set('nm', emailData.firstName);
+    reportUrl.searchParams.set('co', emailData.company || '');
+    // Leaks
     if (leakScores[0]) { reportUrl.searchParams.set('l1', leakScores[0].title); reportUrl.searchParams.set('d1', leakScores[0].desc); }
     if (leakScores[1]) { reportUrl.searchParams.set('l2', leakScores[1].title); reportUrl.searchParams.set('d2', leakScores[1].desc); }
     if (leakScores[2]) { reportUrl.searchParams.set('l3', leakScores[2].title); reportUrl.searchParams.set('d3', leakScores[2].desc); }
+    // Revenue
     if (revenue?.low) reportUrl.searchParams.set('rlo', revenue.low);
     if (revenue?.high) reportUrl.searchParams.set('rhi', revenue.high);
+    // Company
+    if (answers.business_type) reportUrl.searchParams.set('biz', answers.business_type.slice(0, 120));
+    if (readable('years')) reportUrl.searchParams.set('yrs', readable('years'));
+    if (readable('revenue')) reportUrl.searchParams.set('rev', readable('revenue'));
+    if (readable('deal_size')) reportUrl.searchParams.set('ds', readable('deal_size'));
+    if (answers.challenge) reportUrl.searchParams.set('ch', answers.challenge.slice(0, 200));
+    // Leads
+    if (answers.lead_sources) reportUrl.searchParams.set('lsrc', Array.isArray(answers.lead_sources) ? answers.lead_sources.join(', ') : answers.lead_sources);
+    if (readable('lead_volume')) reportUrl.searchParams.set('lvol', readable('lead_volume'));
+    if (readable('cpl_cac')) reportUrl.searchParams.set('cpl', readable('cpl_cac'));
+    if (answers.cpl_cac_input_0) reportUrl.searchParams.set('cplv', answers.cpl_cac_input_0);
+    if (answers.cpl_cac_input_1) reportUrl.searchParams.set('cacv', answers.cpl_cac_input_1);
+    // Sales
+    if (readable('who_sells')) reportUrl.searchParams.set('ws', readable('who_sells'));
+    if (readable('follow_up_speed')) reportUrl.searchParams.set('fup', readable('follow_up_speed'));
+    if (readable('sales_process')) reportUrl.searchParams.set('sp', readable('sales_process'));
+    if (readable('conversion_rate')) reportUrl.searchParams.set('cr', readable('conversion_rate'));
+    if (answers.conversion_rate_input_0) reportUrl.searchParams.set('crv', answers.conversion_rate_input_0 + '%');
+    if (answers.deal_falloff) reportUrl.searchParams.set('df', Array.isArray(answers.deal_falloff) ? answers.deal_falloff.join(', ') : answers.deal_falloff);
+    if (readable('crm')) reportUrl.searchParams.set('crm', readable('crm'));
+    // Benchmarks
+    benchmarks.forEach((b, i) => {
+      reportUrl.searchParams.set(`b${i}l`, b.label);
+      reportUrl.searchParams.set(`b${i}y`, b.yours);
+      reportUrl.searchParams.set(`b${i}b`, b.best);
+    });
 
     sendToSheet({
       first_name: emailData.firstName,
@@ -1323,6 +1441,7 @@ export default function App() {
           leaks={results.leaks}
           answers={answers}
           benchmarks={results.benchmarks}
+          reportAnswers={results.reportAnswers || null}
         />
       )}
     </div>

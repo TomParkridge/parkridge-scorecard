@@ -1201,15 +1201,21 @@ export default function App() {
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
+    console.log("[EmailJS] Sending with:", { serviceId, templateId, publicKey: publicKey ? "set" : "MISSING" });
+
     // Email to the lead
-    emailjs.send(serviceId, templateId, emailParams, publicKey).catch(() => {});
+    emailjs.send(serviceId, templateId, emailParams, publicKey)
+      .then(() => console.log("[EmailJS] Lead email sent OK"))
+      .catch((err) => console.error("[EmailJS] Lead email failed:", err));
 
     // Email to Tom
     emailjs.send(serviceId, templateId, {
       ...emailParams,
       to_name: "Tom",
       to_email: "tom@parkridgeadvisory.com",
-    }, publicKey).catch(() => {});
+    }, publicKey)
+      .then(() => console.log("[EmailJS] Tom email sent OK"))
+      .catch((err) => console.error("[EmailJS] Tom email failed:", err));
   };
 
   return (

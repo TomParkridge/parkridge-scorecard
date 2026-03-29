@@ -880,30 +880,52 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
             </div>
           </div>
 
-          {/* Top 3 Leaks */}
-          <div style={{ marginBottom: 36, animation: "fadeIn 0.5s ease 0.2s both" }}>
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: C.navy, marginBottom: 20 }}>
-              Your Top Revenue Leaks
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {leaks.slice(0, 3).map((leak, i) => (
-                <div key={i} style={{
-                  background: C.white, border: `1px solid ${C.mist}`, borderRadius: 6,
-                  padding: "20px 24px", position: "relative", borderLeft: `3px solid ${C.orange}`,
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                    <span style={{
-                      fontSize: 11, fontWeight: 700, color: C.white, background: C.orange,
-                      width: 22, height: 22, borderRadius: "50%", display: "flex",
-                      alignItems: "center", justifyContent: "center",
-                    }}>{i + 1}</span>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: C.navy }}>{leak.title}</span>
+          {/* Top Leaks */}
+          {(() => {
+            const activeLeaks = leaks.filter(l => l.score < l.maxPts).slice(0, 3);
+            return (
+              <div style={{ marginBottom: 36, animation: "fadeIn 0.5s ease 0.2s both" }}>
+                {activeLeaks.length === 0 ? (
+                  <div style={{
+                    background: C.white, border: `1px solid ${C.mist}`, borderRadius: 6,
+                    padding: "28px 24px", textAlign: "center", borderLeft: `3px solid ${C.green}`,
+                  }}>
+                    <div style={{ fontSize: 24, marginBottom: 12 }}>✓</div>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: C.navy, marginBottom: 8 }}>
+                      Strong Pipeline — No Major Leaks Detected
+                    </div>
+                    <div style={{ fontSize: 14, color: C.navyMuted, fontWeight: 300, lineHeight: 1.6 }}>
+                      Your pipeline is performing well across all key areas. A strategy call can help you identify edge-case optimizations and build on what's already working.
+                    </div>
                   </div>
-                  <div style={{ fontSize: 14, color: C.navyMuted, fontWeight: 300, lineHeight: 1.6 }}>{leak.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ) : (
+                  <>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, color: C.navy, marginBottom: 20 }}>
+                      Your Top Revenue Leaks
+                    </h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                      {activeLeaks.map((leak, i) => (
+                        <div key={i} style={{
+                          background: C.white, border: `1px solid ${C.mist}`, borderRadius: 6,
+                          padding: "20px 24px", position: "relative", borderLeft: `3px solid ${C.orange}`,
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                            <span style={{
+                              fontSize: 11, fontWeight: 700, color: C.white, background: C.orange,
+                              width: 22, height: 22, borderRadius: "50%", display: "flex",
+                              alignItems: "center", justifyContent: "center",
+                            }}>{i + 1}</span>
+                            <span style={{ fontSize: 15, fontWeight: 600, color: C.navy }}>{leak.title}</span>
+                          </div>
+                          <div style={{ fontSize: 14, color: C.navyMuted, fontWeight: 300, lineHeight: 1.6 }}>{leak.desc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Benchmarks */}
           {benchmarks.length > 0 && (

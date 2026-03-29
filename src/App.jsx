@@ -961,7 +961,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               No pitch — just clarity.
             </p>
             <a
-              href="https://calendar.app.google/ShkNPPFHf1WdNFqYA"
+              href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ0ONNJdKWfkWoWrRYEttK7meFcLhDiO7goNRsEdPBeRBdXmBd3MIdOuAuYCz8IXKNNoZDT5muAB?gv=true"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => analytics.callBooked('scorecard')}

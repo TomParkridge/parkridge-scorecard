@@ -39,8 +39,8 @@ const analytics = {
     }
   },
 
-  callBooked: (source = 'scorecard') => {
-    mixpanel.track('Call Booked', { source });
+  callRequested: (source = 'scorecard') => {
+    mixpanel.track('Call Requested', { source });
   },
 
   identifyUser: (email, properties = {}) => {

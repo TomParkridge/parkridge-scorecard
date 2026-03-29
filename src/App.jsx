@@ -964,7 +964,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ0ONNJdKWfkWoWrRYEttK7meFcLhDiO7goNRsEdPBeRBdXmBd3MIdOuAuYCz8IXKNNoZDT5muAB?gv=true"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => analytics.callBooked('scorecard')}
+              onClick={() => analytics.callRequested('scorecard')}
               style={{
                 display: "inline-block", padding: "16px 40px", fontSize: 14,
                 fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",

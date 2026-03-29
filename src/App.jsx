@@ -958,6 +958,8 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
 
           {/* Reframe */}
           {(() => {
+            const activeLeaks = leaks.filter(l => l.score < l.maxPts);
+            if (activeLeaks.length === 0) return null;
             const reframeMap = {
               0: "Your pipeline isn't a volume problem — it's a conversion problem. The leads are there. The opportunity is in how effectively you turn them into revenue.",
               1: "You don't necessarily need more leads — you need to convert the ones you already have more consistently. Fixing the pipeline makes your existing lead flow more predictable.",

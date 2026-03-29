@@ -957,15 +957,27 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
           )}
 
           {/* Reframe */}
-          <div style={{
-            background: C.orangeBg, borderLeft: `3px solid ${C.orange}`,
-            padding: "20px 28px", borderRadius: 4, marginBottom: 36,
-            animation: "fadeIn 0.5s ease 0.6s both",
-          }}>
-            <div style={{ fontSize: 15, fontWeight: 500, color: C.navy, lineHeight: 1.6 }}>
-              You don't necessarily need more leads — you need to convert the ones you already have more effectively.
-            </div>
-          </div>
+          {(() => {
+            const reframeMap = {
+              0: "Your pipeline isn't a volume problem — it's a conversion problem. The leads are there. The opportunity is in how effectively you turn them into revenue.",
+              1: "You don't necessarily need more leads — you need to convert the ones you already have more consistently. Fixing the pipeline makes your existing lead flow more predictable.",
+              2: "Lead volume is part of your challenge — but even with more leads, a leaky pipeline will keep conversion low. Fixing the system first means every new lead works harder for you.",
+              3: "Before investing in more leads, it's worth knowing what your pipeline can actually handle. Getting clear on your conversion rate tells you exactly how many leads you need.",
+            };
+            const reframe = reframeMap[answers.lead_volume];
+            if (!reframe) return null;
+            return (
+              <div style={{
+                background: C.orangeBg, borderLeft: `3px solid ${C.orange}`,
+                padding: "20px 28px", borderRadius: 4, marginBottom: 36,
+                animation: "fadeIn 0.5s ease 0.6s both",
+              }}>
+                <div style={{ fontSize: 15, fontWeight: 500, color: C.navy, lineHeight: 1.6 }}>
+                  {reframe}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* CTA */}
           <div style={{

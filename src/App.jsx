@@ -980,16 +980,31 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
           })()}
 
           {/* CTA */}
+          {(() => {
+            let ctaHeading, ctaBody;
+            if (displayScore <= 40) {
+              ctaHeading = "Your pipeline needs immediate attention.";
+              ctaBody = "Book a free 30-minute Revenue Review. We'll prioritise the 2–3 fixes that will move the needle fastest and stop the bleeding.";
+            } else if (displayScore <= 60) {
+              ctaHeading = "Want to see exactly how to fix these leaks?";
+              ctaBody = "Book a free 30-minute Revenue Review. We'll walk through your score and map out a clear action plan tailored to your pipeline.";
+            } else if (displayScore <= 80) {
+              ctaHeading = "Ready to take your pipeline to the next level?";
+              ctaBody = "Book a free 30-minute Revenue Review. We'll identify the optimisations that turn a solid pipeline into a predictable growth engine.";
+            } else {
+              ctaHeading = "Your pipeline is strong — let's keep it that way.";
+              ctaBody = "Book a free 30-minute call. We'll look at edge-case optimisations and build on what's already working to protect and extend your lead.";
+            }
+            return (
           <div style={{
             background: C.navyDark, borderRadius: 6, padding: "40px 36px",
             textAlign: "center", animation: "fadeIn 0.5s ease 0.8s both",
           }}>
-            {/* Add <img src="/parkridge-icon.png" alt="" style={{ height: 28, marginBottom: 20, opacity: 0.4 }} /> when deploying */}
             <h3 style={{ fontSize: 20, fontWeight: 600, color: C.white, marginBottom: 12 }}>
-              Want to see exactly how to fix these leaks?
+              {ctaHeading}
             </h3>
             <p style={{ fontSize: 14, color: "rgba(248,250,252,0.5)", fontWeight: 300, marginBottom: 8, lineHeight: 1.6 }}>
-              Book a free 30-minute Revenue Review. We'll walk through your score, identify your biggest opportunities, and map out a simple action plan.
+              {ctaBody}
             </p>
             <p style={{ fontSize: 13, color: "rgba(248,250,252,0.35)", marginBottom: 28 }}>
               No pitch — just clarity.
@@ -1012,6 +1027,8 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               Book Your Free Revenue Review
             </a>
           </div>
+            );
+          })()}
         </>
       )}
     </div>

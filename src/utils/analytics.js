@@ -17,11 +17,11 @@ const analytics = {
     mixpanel.track('Scorecard Started');
   },
 
-  stepCompleted: (stepNumber, stepName = '') => {
+  stepCompleted: (stepNumber, stepName = '', totalSteps = 15) => {
     mixpanel.track('Scorecard Step Completed', {
       step_number: stepNumber,
       step_name: stepName,
-      total_steps: 15
+      total_steps: totalSteps
     });
   },
 

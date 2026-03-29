@@ -1195,7 +1195,7 @@ export default function App() {
   const handleNext = () => {
     // Send partial data to sheet after each question
     sendToSheet();
-    analytics.stepCompleted(currentQ + 1, QUESTIONS[currentQ].id);
+    analytics.stepCompleted(currentQ + 1, QUESTIONS[currentQ].id, QUESTIONS.length);
     if (currentQ < QUESTIONS.length - 1) {
       setCurrentQ(currentQ + 1);
     } else {

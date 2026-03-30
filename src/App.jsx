@@ -797,6 +797,7 @@ function ReportSummary({ ra }) {
 // Results screen
 function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportAnswers }) {
   const displayScore = Math.round((score / maxScore) * 100);
+  const activeLeaks = leaks.filter(l => l.score < l.maxPts).slice(0, 3);
   const [animatedScore, setAnimatedScore] = useState(0);
   const [showContent, setShowContent] = useState(false);
 
@@ -865,6 +866,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
           {reportAnswers && <ReportSummary ra={reportAnswers} />}
 
           {/* Revenue Leak */}
+          {activeLeaks.length > 0 && (
           <div style={{
             background: C.navyDark, borderRadius: 6, padding: "32px 36px",
             marginBottom: 36, animation: "fadeIn 0.5s ease",
@@ -879,10 +881,10 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               Based on your answers, this is how much revenue may be slipping through your pipeline each month.
             </div>
           </div>
+          )}
 
           {/* Top Leaks */}
           {(() => {
-            const activeLeaks = leaks.filter(l => l.score < l.maxPts).slice(0, 3);
             return (
               <div style={{ marginBottom: 36, animation: "fadeIn 0.5s ease 0.2s both" }}>
                 {activeLeaks.length === 0 ? (
@@ -958,7 +960,6 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
 
           {/* Reframe */}
           {(() => {
-            const activeLeaks = leaks.filter(l => l.score < l.maxPts);
             if (activeLeaks.length === 0) return null;
             const reframeMap = {
               0: "Your pipeline isn't a volume problem — it's a conversion problem. The leads are there. The opportunity is in how effectively you turn them into revenue.",
@@ -1026,7 +1027,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               onMouseEnter={(e) => { e.target.style.background = C.orangeDark; e.target.style.transform = "translateY(-2px)"; }}
               onMouseLeave={(e) => { e.target.style.background = C.orange; e.target.style.transform = "translateY(0)"; }}
             >
-              Book Your Free Revenue Review
+              {activeLeaks.length > 0 ? "Book Your Free Revenue Review" : "Book Your Free Strategy Call"}
             </a>
           </div>
             );

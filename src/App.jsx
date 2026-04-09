@@ -1426,6 +1426,16 @@ export default function App() {
 
     console.log("[EmailJS] Sending with:", { serviceId, templateId, publicKey: publicKey ? "set" : "MISSING" });
 
+    // HubSpot contact creation
+    fetch("https://api.hsforms.com/submissions/v3/integration/submit/245806817/62f93bdb-38db-418b-a40a-c8a807f75949", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fields: [{ name: "email", value: emailData.email }],
+        context: { pageUri: "https://scorecard.parkridgeadvisory.com", pageName: "Pipeline Scorecard" },
+      }),
+    }).catch(() => {});
+
     // Email to the lead (Tom receives a copy via BCC in EmailJS template settings)
     emailjs.send(serviceId, templateId, emailParams, publicKey)
       .then(() => console.log("[EmailJS] Email sent OK"))

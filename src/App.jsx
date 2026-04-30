@@ -1013,7 +1013,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               No pitch — just clarity.
             </p>
             <a
-              href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ0ONNJdKWfkWoWrRYEttK7meFcLhDiO7goNRsEdPBeRBdXmBd3MIdOuAuYCz8IXKNNoZDT5muAB?gv=true"
+              href="https://calendly.com/tom-parkridgeadvisory/30min"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => analytics.callRequested('scorecard')}

@@ -1318,6 +1318,17 @@ export default function App() {
       revenue_high: revenue?.high || null,
       company: emailData.company || null,
     });
+
+    // Meta Pixel: Lead event — scorecard completion
+    if (typeof window.fbq === 'function') {
+      window.fbq('track', 'Lead', {
+        content_name: 'Pipeline Scorecard',
+        content_category: 'Diagnostic',
+        value: 50.00,
+        currency: 'USD'
+      });
+    }
+
     // Build shareable report URL
     const readable = (id) => {
       const q = QUESTIONS.find(q => q.id === id);

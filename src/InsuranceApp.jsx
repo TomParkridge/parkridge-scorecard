@@ -54,12 +54,14 @@ const QUESTIONS = [
   {
     id: "lead_sources",
     section: "New Business & Lead Generation",
-    sectionDesc: "Where new clients come from",
-    question: "Where do most of your new clients come from?",
+    sectionDesc: "Where new business comes from",
+    question: "Where does most of your new business come from?",
     type: "multiselect",
     options: [
       "Referrals from current clients",
-      "Centers of influence (mortgage brokers, realtors, CPAs)",
+      "Working existing lead pool (unbound quotes, lapsed clients)",
+      "X-date marketing (tracking prospects' policy expirations)",
+      "Cross-sell to existing clients (rounding out households)",
       "Carrier-supplied leads (captive)",
       "Internet leads (EverQuote, NetQuote, web forms)",
       "Networking · chamber · community",
@@ -197,13 +199,12 @@ const QUESTIONS = [
   {
     id: "deal_falloff",
     section: "Conversion & Tracking",
-    question: "Where do most quotes fall apart?",
+    question: "Why do you lose most quotes?",
     type: "multiselect",
     options: [
       "They never respond after we send the quote",
       "\"I'll think about it\" — then they ghost",
       "We lose on price",
-      "Their current carrier matched or undercut us at renewal",
       "We can't write the risk (carrier appetite issue)",
       "Not sure",
     ],
@@ -835,7 +836,7 @@ function ReportSummary({ ra }) {
         ["Quote Response Speed", ra.followUpSpeed],
         ["Quoting Process", ra.salesProcess],
         ["Quote-to-Bind", ra.quoteToBind + (ra.quoteToBindValue ? ` — ${ra.quoteToBindValue}` : "")],
-        ["Quotes Stalling At", ra.dealFalloff],
+        ["Why Quotes Are Lost", ra.dealFalloff],
         ["AMS / CRM Use", ra.amsUse],
       ]} />
       <Section title="Retention & Multi-line" rows={[

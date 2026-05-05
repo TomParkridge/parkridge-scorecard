@@ -997,13 +997,13 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
             let ctaHeading, ctaBody;
             if (displayScore <= 44) {
               ctaHeading = "Your pipeline needs immediate attention.";
-              ctaBody = "Book a free 30-minute Revenue Review. We'll prioritise the 2–3 fixes that will move the needle fastest and stop the bleeding.";
+              ctaBody = "Book a free 30-minute Pipeline Review. We'll prioritise the 2–3 fixes that will move the needle fastest and stop the bleeding.";
             } else if (displayScore <= 64) {
               ctaHeading = "Want to see exactly how to fix these leaks?";
-              ctaBody = "Book a free 30-minute Revenue Review. We'll walk through your score and map out a clear action plan tailored to your pipeline.";
+              ctaBody = "Book a free 30-minute Pipeline Review. We'll walk through your score and map out a clear action plan tailored to your pipeline.";
             } else if (displayScore <= 84) {
               ctaHeading = "Ready to take your pipeline to the next level?";
-              ctaBody = "Book a free 30-minute Revenue Review. We'll identify the optimisations that turn a solid pipeline into a predictable growth engine.";
+              ctaBody = "Book a free 30-minute Pipeline Review. We'll identify the optimisations that turn a solid pipeline into a predictable growth engine.";
             } else {
               ctaHeading = "Your pipeline is strong — let's keep it that way.";
               ctaBody = "Book a free 30-minute call. We'll look at edge-case optimisations and build on what's already working to protect and extend your lead.";
@@ -1037,7 +1037,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               onMouseEnter={(e) => { e.target.style.background = C.orangeDark; e.target.style.transform = "translateY(-2px)"; }}
               onMouseLeave={(e) => { e.target.style.background = C.orange; e.target.style.transform = "translateY(0)"; }}
             >
-              {activeLeaks.length > 0 ? "Book Your Free Revenue Review" : "Book Your Free Strategy Call"}
+              Book Your 30 Min Pipeline Review
             </a>
           </div>
             );

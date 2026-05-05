@@ -66,32 +66,35 @@ const QUESTIONS = [
       "Other",
     ],
     scored: true,
+    // Referrals only = 1 · 1 non-referral source = 2 · 2 sources = 3 · 3+ sources = 5
     score: (val) => {
       if (!val || val.length === 0) return 0;
       if (val.length === 1 && val[0] === "Referrals / word of mouth") return 1;
-      if (val.length === 1) return 1;
-      if (val.length === 2) return 2;
-      return 4;
+      if (val.length === 1) return 2;
+      if (val.length === 2) return 3;
+      return 5;
     },
     leakId: "lead_diversity",
   },
   {
-    id: "lead_volume",
+    id: "marketing_spend",
     section: "Lead Generation",
-    question: "Are you getting enough leads to hit your revenue goals?",
+    question: "What's your approximate monthly spend on marketing and lead generation?",
     type: "single",
     options: [
-      "More than enough — we can't keep up",
-      "Enough, but inconsistent month to month",
-      "Not enough — we need more",
-      "I'm not sure what \"enough\" looks like",
+      "$0 — we don't spend on marketing or paid leads",
+      "Under $1,000 / month",
+      "$1,000 – $5,000 / month",
+      "$5,000 – $15,000 / month",
+      "$15,000+ / month",
     ],
     scored: true,
+    // $0 = 1 · any positive monthly budget = 5 · "$0 isn't automatically bad" — read alongside Q3
     score: (val) => {
-      const scores = { 0: 5, 1: 3, 2: 2, 3: 1 };
-      return scores[val] ?? 0;
+      if (val === 0) return 1;
+      if (val >= 1 && val <= 4) return 5;
+      return 0;
     },
-    leakId: "lead_volume",
   },
   {
     id: "cpl_cac",
@@ -215,10 +218,11 @@ const QUESTIONS = [
       "I'm not sure",
     ],
     scored: true,
+    // Any specific answer = 5 · "Not sure" only = 1
     score: (val) => {
       if (!val || val.length === 0) return 0;
       if (val.includes("I'm not sure") && val.length === 1) return 1;
-      return 3;
+      return 5;
     },
     leakId: "deal_falloff",
   },
@@ -821,9 +825,9 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
 
   let diagnosis = "";
   let diagColor = C.orange;
-  if (displayScore <= 40) { diagnosis = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = C.red; }
-  else if (displayScore <= 60) { diagnosis = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = C.orange; }
-  else if (displayScore <= 80) { diagnosis = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
+  if (displayScore <= 44) { diagnosis = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = C.red; }
+  else if (displayScore <= 64) { diagnosis = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = C.orange; }
+  else if (displayScore <= 84) { diagnosis = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
   else { diagnosis = "Strong — Your pipeline is in good shape. Fine-tuning could take you to the next level."; diagColor = C.green; }
 
   const fmt = (n) => n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;
@@ -958,16 +962,22 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
             </div>
           )}
 
-          {/* Reframe */}
+          {/* Reframe — tailored to marketing spend bucket (Q4) */}
           {(() => {
             if (activeLeaks.length === 0) return null;
             const reframeMap = {
-              0: "Your pipeline isn't a volume problem — it's a conversion problem. The leads are there. The opportunity is in how effectively you turn them into revenue.",
-              1: "You don't necessarily need more leads — you need to convert the ones you already have more consistently. Fixing the pipeline makes your existing lead flow more predictable.",
-              2: "Lead volume is part of your challenge — but even with more leads, a leaky pipeline will keep conversion low. Fixing the system first means every new lead works harder for you.",
-              3: "Before investing in more leads, it's worth knowing what your pipeline can actually handle. Getting clear on your conversion rate tells you exactly how many leads you need.",
+              // 0: $0/month
+              0: "Before buying more leads, the highest-leverage move is usually fixing conversion on the leads you're already getting. A small lift on existing flow is almost always cheaper than spinning up a new traffic channel.",
+              // 1: Under $1k/month
+              1: "You're spending modestly — every dollar should be measurable. Tighten conversion before scaling spend, and the same budget will produce more deals.",
+              // 2: $1k–$5k/month
+              2: "You're spending real money on leads. The biggest ROI move now is closing the conversion gaps in this report — same budget, more closed deals.",
+              // 3: $5k–$15k/month
+              3: "At this spend level, conversion leaks compound fast. A few percentage points of close-rate improvement are usually worth more than another $1k of ad spend.",
+              // 4: $15k+/month
+              4: "You're investing seriously in lead acquisition. Make sure every lead works as hard as it can — at this volume, small conversion gains move real revenue.",
             };
-            const reframe = reframeMap[answers.lead_volume];
+            const reframe = reframeMap[answers.marketing_spend];
             if (!reframe) return null;
             return (
               <div style={{
@@ -985,13 +995,13 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
           {/* CTA */}
           {(() => {
             let ctaHeading, ctaBody;
-            if (displayScore <= 40) {
+            if (displayScore <= 44) {
               ctaHeading = "Your pipeline needs immediate attention.";
               ctaBody = "Book a free 30-minute Revenue Review. We'll prioritise the 2–3 fixes that will move the needle fastest and stop the bleeding.";
-            } else if (displayScore <= 60) {
+            } else if (displayScore <= 64) {
               ctaHeading = "Want to see exactly how to fix these leaks?";
               ctaBody = "Book a free 30-minute Revenue Review. We'll walk through your score and map out a clear action plan tailored to your pipeline.";
-            } else if (displayScore <= 80) {
+            } else if (displayScore <= 84) {
               ctaHeading = "Ready to take your pipeline to the next level?";
               ctaBody = "Book a free 30-minute Revenue Review. We'll identify the optimisations that turn a solid pipeline into a predictable growth engine.";
             } else {
@@ -1211,7 +1221,7 @@ export default function App() {
     if (answers.challenge) payload.q1_challenge = answers.challenge;
     if (answers.tried) payload.q2_tried = answers.tried;
     if (answers.lead_sources) payload.q3_lead_sources = Array.isArray(answers.lead_sources) ? answers.lead_sources.join(", ") : answers.lead_sources;
-    if (answers.lead_volume !== undefined) payload.q4_lead_volume = QUESTIONS.find(q => q.id === "lead_volume")?.options[answers.lead_volume] || "";
+    if (answers.marketing_spend !== undefined) payload.q4_marketing_spend = QUESTIONS.find(q => q.id === "marketing_spend")?.options[answers.marketing_spend] || "";
     if (answers.cpl_cac !== undefined) payload.q5_cpl_cac = QUESTIONS.find(q => q.id === "cpl_cac")?.options[answers.cpl_cac] || "";
     if (answers.cpl_cac_input_0) payload.q5_cpl_value = answers.cpl_cac_input_0;
     if (answers.cpl_cac_input_1) payload.q5_cac_value = answers.cpl_cac_input_1;
@@ -1271,11 +1281,14 @@ export default function App() {
     let maxScore = 0;
     const leakScores = [];
 
+    // Scored: Q3 lead_sources · Q4 marketing_spend · Q5 cpl_cac · Q7 follow_up_speed
+    //         Q8 sales_process · Q9 conversion_rate · Q10 deal_falloff · Q11 crm
+    // All eight max at 5pts each → raw total: 8–40 → display × 2.5 → 20–100 / 100
     QUESTIONS.forEach(q => {
       if (q.scored && q.score) {
         const val = answers[q.id];
         const pts = q.score(val);
-        const maxPts = q.id === "lead_sources" ? 4 : q.id === "deal_falloff" ? 3 : 5;
+        const maxPts = 5;
         totalScore += pts;
         maxScore += maxPts;
         if (q.leakId) {
@@ -1392,9 +1405,9 @@ export default function App() {
     // Send email report to lead and Tom
     let diagnosisText = "";
     let diagColor = "#f97316";
-    if (displayScore <= 40) { diagnosisText = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = "#ef4444"; }
-    else if (displayScore <= 60) { diagnosisText = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = "#f97316"; }
-    else if (displayScore <= 80) { diagnosisText = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
+    if (displayScore <= 44) { diagnosisText = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = "#ef4444"; }
+    else if (displayScore <= 64) { diagnosisText = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = "#f97316"; }
+    else if (displayScore <= 84) { diagnosisText = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
     else { diagnosisText = "Strong — Your pipeline is in good shape. Fine-tuning could take you to the next level."; diagColor = "#22c55e"; }
 
     const fmt = (n) => n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;

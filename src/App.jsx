@@ -1438,11 +1438,15 @@ export default function App() {
     console.log("[EmailJS] Sending with:", { serviceId, templateId, publicKey: publicKey ? "set" : "MISSING" });
 
     // HubSpot contact creation
+    const hsFields = [{ name: "email", value: emailData.email }];
+    if (emailData.firstName) hsFields.push({ name: "firstname", value: emailData.firstName });
+    if (emailData.company)   hsFields.push({ name: "company", value: emailData.company });
+
     fetch("https://api.hsforms.com/submissions/v3/integration/submit/245806817/62f93bdb-38db-418b-a40a-c8a807f75949", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        fields: [{ name: "email", value: emailData.email }],
+        fields: hsFields,
         context: { pageUri: "https://scorecard.parkridgeadvisory.com", pageName: "Pipeline Scorecard" },
       }),
     }).catch(() => {});

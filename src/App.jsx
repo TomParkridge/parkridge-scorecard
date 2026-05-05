@@ -180,9 +180,28 @@ const QUESTIONS = [
   },
   // Section 4: Conversion
   {
+    id: "deals_closed_90d",
+    section: "Conversion & Tracking",
+    sectionDesc: "How is your pipeline actually performing?",
+    question: "Roughly how many new customers have you closed in the last 90 days?",
+    type: "single",
+    options: [
+      "0 — none yet",
+      "1–3",
+      "4–10",
+      "11+",
+    ],
+    scored: true,
+    // 0 = 1pt · 1–3 = 2pts · 4–10 = 4pts · 11+ = 5pts
+    // Also gates the "Pre-pipeline" diagnosis override (when val === 0)
+    score: (val) => {
+      const scores = { 0: 1, 1: 2, 2: 4, 3: 5 };
+      return scores[val] ?? 0;
+    },
+  },
+  {
     id: "conversion_rate",
     section: "Conversion & Tracking",
-    sectionDesc: "Do you know your numbers?",
     question: "Do you know your lead-to-close conversion rate?",
     type: "single_with_input",
     options: [
@@ -218,11 +237,13 @@ const QUESTIONS = [
       "I'm not sure",
     ],
     scored: true,
-    // Any specific answer = 5 · "Not sure" only = 1
+    maxPts: 3,
+    // Caps at 3 — naming a stalling pattern shouldn't earn full marks; you've still got a leak.
+    // Any specific answer = 3 · "Not sure" only = 1
     score: (val) => {
       if (!val || val.length === 0) return 0;
       if (val.includes("I'm not sure") && val.length === 1) return 1;
-      return 5;
+      return 3;
     },
     leakId: "deal_falloff",
   },
@@ -781,7 +802,7 @@ function ReportSummary({ ra }) {
       ]} />
       <Section title="Pipeline & Leads" rows={[
         ["Lead Sources", ra.leadSources],
-        ["Monthly Lead Volume", ra.leadVolume],
+        ["Monthly Marketing Spend", ra.marketingSpend],
         ["CPL / CAC Awareness", ra.cplCac],
         ["Cost per Lead", ra.cplValue ? `$${ra.cplValue}` : ""],
         ["Cost to Acquire (CAC)", ra.cacValue ? `$${ra.cacValue}` : ""],
@@ -790,6 +811,7 @@ function ReportSummary({ ra }) {
         ["Who Sells", ra.whoSells],
         ["Follow-up Speed", ra.followUpSpeed],
         ["Sales Process", ra.salesProcess],
+        ["Closed (Last 90 Days)", ra.dealsClosed90d],
         ["Conversion Rate", ra.conversionRate + (ra.conversionValue ? ` — ${ra.conversionValue}` : "")],
         ["Deals Stalling At", ra.dealFalloff],
         ["CRM / Pipeline Tool", ra.crm],
@@ -801,7 +823,15 @@ function ReportSummary({ ra }) {
 // Results screen
 function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportAnswers }) {
   const displayScore = Math.round((score / maxScore) * 100);
-  const activeLeaks = leaks.filter(l => l.score < l.maxPts).slice(0, 3);
+  // For URL-loaded reports, leak entries don't carry score/maxPts —
+  // only active leaks ever made it into the URL, so include them all.
+  const activeLeaks = leaks.filter(l =>
+    l.maxPts === undefined || l.score < l.maxPts
+  ).slice(0, 3);
+  // Pre-pipeline detection — overrides band diagnosis & CTA copy below.
+  // Triggers when deals_closed_90d = 0 (live answers) or dc90n = 0 (URL-loaded).
+  const prePipeline = answers?.deals_closed_90d === 0
+    || (reportAnswers && reportAnswers.dealsClosed90dNum === 0);
   const [animatedScore, setAnimatedScore] = useState(0);
   const [showContent, setShowContent] = useState(false);
 
@@ -825,7 +855,8 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
 
   let diagnosis = "";
   let diagColor = C.orange;
-  if (displayScore <= 44) { diagnosis = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = C.red; }
+  if (prePipeline) { diagnosis = "Pre-pipeline — Your pipeline isn't broken; it doesn't exist yet. The fundamentals (follow-up speed, sales process) only matter once you have leads flowing through. Let's talk about getting you there first."; diagColor = C.red; }
+  else if (displayScore <= 44) { diagnosis = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = C.red; }
   else if (displayScore <= 64) { diagnosis = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = C.orange; }
   else if (displayScore <= 84) { diagnosis = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
   else { diagnosis = "Strong — Your pipeline is in good shape. Fine-tuning could take you to the next level."; diagColor = C.green; }
@@ -994,19 +1025,27 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
 
           {/* CTA */}
           {(() => {
-            let ctaHeading, ctaBody;
-            if (displayScore <= 44) {
+            let ctaHeading, ctaBody, ctaLabel;
+            if (prePipeline) {
+              ctaHeading = "Let's start with the foundations.";
+              ctaBody = "Your pipeline isn't broken — it just doesn't have flow yet. Book a free 30-minute call. We'll talk about getting your first repeatable lead source in place before worrying about optimization.";
+              ctaLabel = "Book Your Foundations Call";
+            } else if (displayScore <= 44) {
               ctaHeading = "Your pipeline needs immediate attention.";
               ctaBody = "Book a free 30-minute Pipeline Review. We'll prioritise the 2–3 fixes that will move the needle fastest and stop the bleeding.";
+              ctaLabel = "Book Your 30 Min Pipeline Review";
             } else if (displayScore <= 64) {
               ctaHeading = "Want to see exactly how to fix these leaks?";
               ctaBody = "Book a free 30-minute Pipeline Review. We'll walk through your score and map out a clear action plan tailored to your pipeline.";
+              ctaLabel = "Book Your 30 Min Pipeline Review";
             } else if (displayScore <= 84) {
               ctaHeading = "Ready to take your pipeline to the next level?";
               ctaBody = "Book a free 30-minute Pipeline Review. We'll identify the optimisations that turn a solid pipeline into a predictable growth engine.";
+              ctaLabel = "Book Your 30 Min Pipeline Review";
             } else {
               ctaHeading = "Your pipeline is strong — let's keep it that way.";
               ctaBody = "Book a free 30-minute call. We'll look at edge-case optimisations and build on what's already working to protect and extend your lead.";
+              ctaLabel = "Book Your 30 Min Pipeline Review";
             }
             return (
           <div style={{
@@ -1037,7 +1076,7 @@ function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportA
               onMouseEnter={(e) => { e.target.style.background = C.orangeDark; e.target.style.transform = "translateY(-2px)"; }}
               onMouseLeave={(e) => { e.target.style.background = C.orange; e.target.style.transform = "translateY(0)"; }}
             >
-              Book Your 30 Min Pipeline Review
+              {ctaLabel}
             </a>
           </div>
             );
@@ -1159,14 +1198,25 @@ export default function App() {
   const [results, setResults] = useState(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get('r') !== '1') return null;
+    // Parse leak entries; score/maxPts are present on URLs generated after the
+    // share-URL bugfix. For older URLs they'll be undefined and the activeLeaks
+    // filter in <Results> includes them by default.
+    const parseLeak = (n) => {
+      const title = p.get(`l${n}`) || '';
+      if (!title) return null;
+      const sRaw = p.get(`l${n}s`);
+      const mRaw = p.get(`l${n}m`);
+      return {
+        title,
+        desc: p.get(`d${n}`) || '',
+        score: sRaw !== null ? parseInt(sRaw, 10) : undefined,
+        maxPts: mRaw !== null ? parseInt(mRaw, 10) : undefined,
+      };
+    };
     return {
       score: parseInt(p.get('score') || '0'),
       maxScore: 100,
-      leaks: [
-        { title: p.get('l1') || '', desc: p.get('d1') || '' },
-        { title: p.get('l2') || '', desc: p.get('d2') || '' },
-        { title: p.get('l3') || '', desc: p.get('d3') || '' },
-      ].filter(l => l.title),
+      leaks: [parseLeak(1), parseLeak(2), parseLeak(3)].filter(Boolean),
       revenue: {
         low: parseInt(p.get('rlo') || '0'),
         high: parseInt(p.get('rhi') || '0'),
@@ -1184,7 +1234,9 @@ export default function App() {
         dealSize: p.get('ds') || '',
         challenge: p.get('ch') || '',
         leadSources: p.get('lsrc') || '',
-        leadVolume: p.get('lvol') || '',
+        marketingSpend: p.get('msp') || '',
+        dealsClosed90d: p.get('dc90') || '',
+        dealsClosed90dNum: p.get('dc90n') !== null ? parseInt(p.get('dc90n'), 10) : undefined,
         cplCac: p.get('cpl') || '',
         cplValue: p.get('cplv') || '',
         cacValue: p.get('cacv') || '',
@@ -1228,6 +1280,7 @@ export default function App() {
     if (answers.who_sells !== undefined) payload.q6_who_sells = QUESTIONS.find(q => q.id === "who_sells")?.options[answers.who_sells] || "";
     if (answers.follow_up_speed !== undefined) payload.q7_follow_up_speed = QUESTIONS.find(q => q.id === "follow_up_speed")?.options[answers.follow_up_speed] || "";
     if (answers.sales_process !== undefined) payload.q8_sales_process = QUESTIONS.find(q => q.id === "sales_process")?.options[answers.sales_process] || "";
+    if (answers.deals_closed_90d !== undefined) payload.q8b_deals_closed_90d = QUESTIONS.find(q => q.id === "deals_closed_90d")?.options[answers.deals_closed_90d] || "";
     if (answers.conversion_rate !== undefined) payload.q9_conversion_rate = QUESTIONS.find(q => q.id === "conversion_rate")?.options[answers.conversion_rate] || "";
     if (answers.conversion_rate_input_0) payload.q9_conversion_value = answers.conversion_rate_input_0;
     if (answers.deal_falloff) payload.q10_deal_falloff = Array.isArray(answers.deal_falloff) ? answers.deal_falloff.join(", ") : answers.deal_falloff;
@@ -1281,14 +1334,16 @@ export default function App() {
     let maxScore = 0;
     const leakScores = [];
 
-    // Scored: Q3 lead_sources · Q4 marketing_spend · Q5 cpl_cac · Q7 follow_up_speed
-    //         Q8 sales_process · Q9 conversion_rate · Q10 deal_falloff · Q11 crm
-    // All eight max at 5pts each → raw total: 8–40 → display × 2.5 → 20–100 / 100
+    // Scored question IDs (9 total):
+    //   lead_sources · marketing_spend · cpl_cac · follow_up_speed · sales_process
+    //   · deals_closed_90d · conversion_rate · deal_falloff (max 3) · crm
+    // 8 questions max at 5 + deal_falloff caps at 3 → raw total: 9–43
+    // Display = round((raw / 43) × 100)
     QUESTIONS.forEach(q => {
       if (q.scored && q.score) {
         const val = answers[q.id];
         const pts = q.score(val);
-        const maxPts = 5;
+        const maxPts = q.maxPts ?? 5;
         totalScore += pts;
         maxScore += maxPts;
         if (q.leakId) {
@@ -1296,6 +1351,20 @@ export default function App() {
         }
       }
     });
+
+    // Solution C — cap self-reported quality scores when no objective data backs them.
+    // If conversion_rate = "Never measured" AND CRM is absent or barely used, then
+    // claims of fast follow-up / defined process are unfalsifiable; cap each at 3/5.
+    const noObjectiveData = answers.conversion_rate === 2 && (answers.crm === 1 || answers.crm === 2);
+    if (noObjectiveData) {
+      const idsToCap = ["follow_up_speed", "sales_process"];
+      leakScores.forEach(leak => {
+        if (idsToCap.includes(leak.id) && leak.score > 3) {
+          totalScore -= (leak.score - 3);
+          leak.score = 3;
+        }
+      });
+    }
 
     // Sort leaks by score ascending (worst first)
     leakScores.sort((a, b) => a.score - b.score);
@@ -1360,9 +1429,16 @@ export default function App() {
     reportUrl.searchParams.set('em', emailData.email);
     reportUrl.searchParams.set('co', emailData.company || '');
     // Leaks
-    if (leakScores[0]) { reportUrl.searchParams.set('l1', leakScores[0].title); reportUrl.searchParams.set('d1', leakScores[0].desc); }
-    if (leakScores[1]) { reportUrl.searchParams.set('l2', leakScores[1].title); reportUrl.searchParams.set('d2', leakScores[1].desc); }
-    if (leakScores[2]) { reportUrl.searchParams.set('l3', leakScores[2].title); reportUrl.searchParams.set('d3', leakScores[2].desc); }
+    // Top 3 leaks (titles, descriptions, raw score, max pts)
+    [0, 1, 2].forEach(i => {
+      const lk = leakScores[i];
+      if (!lk) return;
+      const n = i + 1;
+      reportUrl.searchParams.set(`l${n}`, lk.title);
+      reportUrl.searchParams.set(`d${n}`, lk.desc);
+      reportUrl.searchParams.set(`l${n}s`, String(lk.score));
+      reportUrl.searchParams.set(`l${n}m`, String(lk.maxPts));
+    });
     // Revenue
     if (revenue?.low) reportUrl.searchParams.set('rlo', revenue.low);
     if (revenue?.high) reportUrl.searchParams.set('rhi', revenue.high);
@@ -1374,7 +1450,9 @@ export default function App() {
     if (answers.challenge) reportUrl.searchParams.set('ch', answers.challenge.slice(0, 200));
     // Leads
     if (answers.lead_sources) reportUrl.searchParams.set('lsrc', Array.isArray(answers.lead_sources) ? answers.lead_sources.join(', ') : answers.lead_sources);
-    if (readable('lead_volume')) reportUrl.searchParams.set('lvol', readable('lead_volume'));
+    if (readable('marketing_spend')) reportUrl.searchParams.set('msp', readable('marketing_spend'));
+    if (readable('deals_closed_90d')) reportUrl.searchParams.set('dc90', readable('deals_closed_90d'));
+    if (answers.deals_closed_90d !== undefined) reportUrl.searchParams.set('dc90n', String(answers.deals_closed_90d));
     if (readable('cpl_cac')) reportUrl.searchParams.set('cpl', readable('cpl_cac'));
     if (answers.cpl_cac_input_0) reportUrl.searchParams.set('cplv', answers.cpl_cac_input_0);
     if (answers.cpl_cac_input_1) reportUrl.searchParams.set('cacv', answers.cpl_cac_input_1);
@@ -1403,9 +1481,11 @@ export default function App() {
     });
 
     // Send email report to lead and Tom
+    const prePipeline = answers.deals_closed_90d === 0;
     let diagnosisText = "";
     let diagColor = "#f97316";
-    if (displayScore <= 44) { diagnosisText = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = "#ef4444"; }
+    if (prePipeline) { diagnosisText = "Pre-pipeline — Your pipeline isn't broken; it doesn't exist yet. The fundamentals (follow-up speed, sales process) only matter once you have leads flowing through. Let's talk about getting you there first."; diagColor = "#ef4444"; }
+    else if (displayScore <= 44) { diagnosisText = "Critical — Your pipeline has major leaks. You're leaving significant revenue on the table."; diagColor = "#ef4444"; }
     else if (displayScore <= 64) { diagnosisText = "Needs Work — Your pipeline has clear gaps. Fixing them could unlock meaningful growth."; diagColor = "#f97316"; }
     else if (displayScore <= 84) { diagnosisText = "Solid Foundation — Your pipeline is functional but there's room to optimize and scale."; diagColor = "#D97706"; }
     else { diagnosisText = "Strong — Your pipeline is in good shape. Fine-tuning could take you to the next level."; diagColor = "#22c55e"; }

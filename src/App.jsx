@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import emailjs from "@emailjs/browser";
 import analytics from "./utils/analytics";
+import { QUESTIONS, OTHER_OPTION_ID, OTHER_TEXT_KEY, OTHER_TEXT_MAX } from "./scorecard/questions";
+import { isProduction } from "./scorecard/env";
 
 // ============================================================
 // PARKRIDGE GROWTH ENGINE SCORECARD
@@ -27,278 +29,6 @@ const C = {
   red: "#D94F4F",
   green: "#059669",
 };
-
-// ============================================================
-// QUESTIONS DATA
-// ============================================================
-const QUESTIONS = [
-  // Section 1: Emotional Hook
-  {
-    id: "challenge",
-    section: "Your Challenge",
-    sectionDesc: "Let's start with what matters most to you",
-    question: "What's the biggest growth challenge you're facing right now?",
-    type: "longtext",
-    placeholder: "Example: We're stuck at $2M and can't figure out how to break through. Most of our business comes from referrals and it's inconsistent month to month.",
-    scored: false,
-  },
-  {
-    id: "tried",
-    section: "Your Challenge",
-    question: "What have you already tried to fix it?",
-    type: "longtext",
-    placeholder: "Example: We tried running Google Ads for 6 months and hired a part-time salesperson but neither really moved the needle.",
-    scored: false,
-  },
-  // Section 2: Lead Generation
-  {
-    id: "lead_sources",
-    section: "Lead Generation",
-    sectionDesc: "Where your customers come from",
-    question: "How do most of your customers find you?",
-    type: "multiselect",
-    options: [
-      "Referrals / word of mouth",
-      "Paid ads (Google, Facebook, etc.)",
-      "Organic / SEO",
-      "Social media",
-      "Outbound / cold outreach",
-      "Other",
-    ],
-    scored: true,
-    // Referrals only = 1 · 1 non-referral source = 2 · 2 sources = 3 · 3+ sources = 5
-    score: (val) => {
-      if (!val || val.length === 0) return 0;
-      if (val.length === 1 && val[0] === "Referrals / word of mouth") return 1;
-      if (val.length === 1) return 2;
-      if (val.length === 2) return 3;
-      return 5;
-    },
-    leakId: "lead_diversity",
-  },
-  {
-    id: "marketing_spend",
-    section: "Lead Generation",
-    question: "What's your approximate monthly spend on marketing and lead generation?",
-    type: "single",
-    options: [
-      "$0 — we don't spend on marketing or paid leads",
-      "Under $1,000 / month",
-      "$1,000 – $5,000 / month",
-      "$5,000 – $15,000 / month",
-      "$15,000+ / month",
-    ],
-    scored: true,
-    // $0 = 1 · any positive monthly budget = 5 · "$0 isn't automatically bad" — read alongside Q3
-    score: (val) => {
-      if (val === 0) return 1;
-      if (val >= 1 && val <= 4) return 5;
-      return 0;
-    },
-  },
-  {
-    id: "cpl_cac",
-    section: "Lead Generation",
-    question: "Do you know your cost per lead (CPL) and cost to acquire a customer (CAC)?",
-    type: "single_with_input",
-    options: [
-      "Yes, I know my numbers",
-      "I have a rough idea",
-      "No idea",
-    ],
-    inputFields: [
-      { label: "CPL", prefix: "$", showOn: [0, 1] },
-      { label: "CAC", prefix: "$", showOn: [0, 1] },
-    ],
-    scored: true,
-    score: (val) => {
-      const scores = { 0: 5, 1: 3, 2: 1 };
-      return scores[val] ?? 0;
-    },
-    leakId: "cost_awareness",
-  },
-  // Section 3: Sales Process
-  {
-    id: "who_sells",
-    section: "Sales Process",
-    sectionDesc: "What happens after a lead comes in",
-    question: "Who's responsible for bringing in new business?",
-    type: "single",
-    options: [
-      "Just me — I handle all sales and marketing",
-      "Me plus 1–2 people who help",
-      "A small team (3–5 people)",
-      "We have a dedicated sales or marketing team",
-    ],
-    scored: false,
-  },
-  {
-    id: "follow_up_speed",
-    section: "Sales Process",
-    question: "How quickly does someone follow up with a new lead?",
-    type: "single",
-    options: [
-      "Within 15 minutes",
-      "Within 1 hour",
-      "Same day",
-      "1–2 days",
-      "It varies",
-    ],
-    scored: true,
-    score: (val) => {
-      const scores = { 0: 5, 1: 4, 2: 3, 3: 1, 4: 1 };
-      return scores[val] ?? 0;
-    },
-    leakId: "follow_up_speed",
-    benchmark: {
-      label: "Follow-up speed",
-      best: "Under 5 minutes",
-      answers: ["Within 15 minutes", "Within 1 hour", "Same day", "1–2 days", "It varies"],
-    },
-  },
-  {
-    id: "sales_process",
-    section: "Sales Process",
-    question: "Do you have a defined sales or follow-up process?",
-    type: "single",
-    options: [
-      "Yes, clearly defined and documented",
-      "Sort of — we have a general approach",
-      "No, it's mostly ad hoc",
-    ],
-    scored: true,
-    score: (val) => {
-      const scores = { 0: 5, 1: 3, 2: 1 };
-      return scores[val] ?? 0;
-    },
-    leakId: "sales_process",
-    benchmark: {
-      label: "Sales process",
-      best: "Documented & repeatable",
-      answers: ["Clearly defined", "General approach", "Ad hoc"],
-    },
-  },
-  // Section 4: Conversion
-  {
-    id: "deals_closed_90d",
-    section: "Conversion & Tracking",
-    sectionDesc: "How is your pipeline actually performing?",
-    question: "Roughly how many new customers have you closed in the last 90 days?",
-    type: "single",
-    options: [
-      "0 — none yet",
-      "1–3",
-      "4–10",
-      "11+",
-    ],
-    scored: true,
-    // 0 = 1pt · 1–3 = 2pts · 4–10 = 4pts · 11+ = 5pts
-    // Also gates the "Pre-pipeline" diagnosis override (when val === 0)
-    score: (val) => {
-      const scores = { 0: 1, 1: 2, 2: 4, 3: 5 };
-      return scores[val] ?? 0;
-    },
-  },
-  {
-    id: "conversion_rate",
-    section: "Conversion & Tracking",
-    question: "Do you know your lead-to-close conversion rate?",
-    type: "single_with_input",
-    options: [
-      "Yes — I track it regularly",
-      "I have a rough sense",
-      "No — I've never measured it",
-    ],
-    inputFields: [
-      { label: "Conversion rate", suffix: "%", showOn: [0, 1] },
-    ],
-    scored: true,
-    score: (val) => {
-      const scores = { 0: 5, 1: 3, 2: 1 };
-      return scores[val] ?? 0;
-    },
-    leakId: "conversion_tracking",
-    benchmark: {
-      label: "Conversion tracking",
-      best: "Tracked weekly",
-      answers: ["Tracked regularly", "Rough sense", "Not tracked"],
-    },
-  },
-  {
-    id: "deal_falloff",
-    section: "Conversion & Tracking",
-    question: "Where do most deals fall apart?",
-    type: "multiselect",
-    options: [
-      "They go silent after first contact",
-      "They get a quote but never close",
-      "They say \"I'll think about it\" and disappear",
-      "We lose to competitors",
-      "I'm not sure",
-    ],
-    scored: true,
-    maxPts: 3,
-    // Caps at 3 — naming a stalling pattern shouldn't earn full marks; you've still got a leak.
-    // Any specific answer = 3 · "Not sure" only = 1
-    score: (val) => {
-      if (!val || val.length === 0) return 0;
-      if (val.includes("I'm not sure") && val.length === 1) return 1;
-      return 3;
-    },
-    leakId: "deal_falloff",
-  },
-  {
-    id: "crm",
-    section: "Conversion & Tracking",
-    question: "Are you using a CRM or any system to track your pipeline?",
-    type: "single",
-    options: [
-      "Yes, actively — it's part of our daily workflow",
-      "Yes, but barely — it's not really maintained",
-      "No",
-    ],
-    scored: true,
-    score: (val) => {
-      const scores = { 0: 5, 1: 2, 2: 1 };
-      return scores[val] ?? 0;
-    },
-    leakId: "crm_usage",
-  },
-  // Section 5: Business Context
-  {
-    id: "business_type",
-    section: "About Your Business",
-    sectionDesc: "A few quick details to personalize your results",
-    question: "What does your business do?",
-    type: "shorttext",
-    placeholder: "e.g., IT consulting, HVAC services, insurance agency...",
-    scored: false,
-  },
-  {
-    id: "years",
-    section: "About Your Business",
-    question: "How long have you been in business?",
-    type: "single",
-    options: ["Less than 1 year", "1–3 years", "3–5 years", "5+ years"],
-    scored: false,
-  },
-  {
-    id: "revenue",
-    section: "About Your Business",
-    question: "What's your approximate annual revenue?",
-    type: "single",
-    options: ["Under $500K", "$500K – $1M", "$1M – $3M", "$3M – $5M", "$5M+"],
-    scored: false,
-  },
-  {
-    id: "deal_size",
-    section: "About Your Business",
-    question: "What's your average deal size or customer value?",
-    type: "single",
-    options: ["Under $500", "$500 – $2,000", "$2,000 – $10,000", "$10,000 – $50,000", "$50,000+", "I'm not sure"],
-    scored: false,
-  },
-];
 
 // ============================================================
 // LEAK DEFINITIONS
@@ -507,9 +237,25 @@ function SectionHeader({ section, desc }) {
   );
 }
 
+// Option label with optional help line underneath
+function OptionLabel({ opt }) {
+  return (
+    <span>
+      {opt.label}
+      {opt.help && (
+        <span style={{ display: "block", fontSize: 13, color: C.navyMuted, fontWeight: 300, lineHeight: 1.5, marginTop: 2 }}>
+          {opt.help}
+        </span>
+      )}
+    </span>
+  );
+}
+
 // Question renderer
-function QuestionView({ q, value, onChange, inputValues, onInputChange, onNext, onBack, canProceed, currentQ, totalQ }) {
+function QuestionView({ q, value, onChange, inputValues, onInputChange, otherText, onOtherTextChange, onNext, onBack, canProceed, currentQ, totalQ }) {
   const showSection = q.sectionDesc !== undefined;
+  const picks = q.type === "multi" ? (value || []) : [];
+  const atPickLimit = q.maxPicks !== undefined && picks.length >= q.maxPicks;
 
   return (
     <div style={{
@@ -527,8 +273,11 @@ function QuestionView({ q, value, onChange, inputValues, onInputChange, onNext, 
 
       <h2 style={{
         fontSize: "clamp(1.3rem, 3vw, 1.7rem)", fontWeight: 600, color: C.navy,
-        lineHeight: 1.35, marginBottom: 32,
-      }}>{q.question}</h2>
+        lineHeight: 1.35, marginBottom: q.help ? 12 : 32,
+      }}>{q.prompt}</h2>
+      {q.help && (
+        <p style={{ fontSize: 14, color: C.navyMuted, fontWeight: 300, marginBottom: 32 }}>{q.help}</p>
+      )}
 
       {q.type === "longtext" && (
         <textarea
@@ -568,27 +317,27 @@ function QuestionView({ q, value, onChange, inputValues, onInputChange, onNext, 
           {q.options.map((opt, i) => (
             <div key={i}>
               <button
-                onClick={() => onChange(i)}
+                onClick={() => onChange(opt.id)}
                 style={{
                   width: "100%", textAlign: "left", padding: "14px 20px",
                   fontSize: 15, fontFamily: "'DM Sans', sans-serif",
-                  background: value === i ? C.orangeBg : C.white,
-                  border: `1px solid ${value === i ? C.orange : C.mist}`,
+                  background: value === opt.id ? C.orangeBg : C.white,
+                  border: `1px solid ${value === opt.id ? C.orange : C.mist}`,
                   borderRadius: 4, cursor: "pointer", color: C.navy,
-                  transition: "all 0.2s", fontWeight: value === i ? 500 : 400,
+                  transition: "all 0.2s", fontWeight: value === opt.id ? 500 : 400,
                   display: "flex", alignItems: "center", gap: 12,
                 }}
               >
                 <span style={{
                   width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
-                  border: `2px solid ${value === i ? C.orange : C.mist}`,
-                  background: value === i ? C.orange : "transparent",
+                  border: `2px solid ${value === opt.id ? C.orange : C.mist}`,
+                  background: value === opt.id ? C.orange : "transparent",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.2s",
                 }}>
-                  {value === i && <span style={{ color: C.white, fontSize: 12, fontWeight: 700 }}>✓</span>}
+                  {value === opt.id && <span style={{ color: C.white, fontSize: 12, fontWeight: 700 }}>✓</span>}
                 </span>
-                {opt}
+                <OptionLabel opt={opt} />
               </button>
               {q.type === "single_with_input" && q.inputFields && value === i && q.inputFields.some(f => f.showOn.includes(i)) && (
                 <div style={{ display: "flex", gap: 12, marginTop: 10, paddingLeft: 36 }}>
@@ -619,24 +368,26 @@ function QuestionView({ q, value, onChange, inputValues, onInputChange, onNext, 
         </div>
       )}
 
-      {q.type === "multiselect" && (
+      {q.type === "multi" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {q.options.map((opt, i) => {
-            const selected = (value || []).includes(opt);
+            const selected = picks.includes(opt.id);
+            const blocked = !selected && atPickLimit;
             return (
               <button
                 key={i}
+                disabled={blocked}
                 onClick={() => {
-                  const curr = value || [];
-                  if (selected) onChange(curr.filter(v => v !== opt));
-                  else onChange([...curr, opt]);
+                  if (selected) onChange(picks.filter(v => v !== opt.id));
+                  else onChange([...picks, opt.id]);
                 }}
                 style={{
                   width: "100%", textAlign: "left", padding: "14px 20px",
                   fontSize: 15, fontFamily: "'DM Sans', sans-serif",
                   background: selected ? C.orangeBg : C.white,
                   border: `1px solid ${selected ? C.orange : C.mist}`,
-                  borderRadius: 4, cursor: "pointer", color: C.navy,
+                  borderRadius: 4, cursor: blocked ? "default" : "pointer", color: C.navy,
+                  opacity: blocked ? 0.45 : 1,
                   transition: "all 0.2s", fontWeight: selected ? 500 : 400,
                   display: "flex", alignItems: "center", gap: 12,
                 }}
@@ -650,11 +401,30 @@ function QuestionView({ q, value, onChange, inputValues, onInputChange, onNext, 
                 }}>
                   {selected && <span style={{ color: C.white, fontSize: 12, fontWeight: 700 }}>✓</span>}
                 </span>
-                {opt}
+                <OptionLabel opt={opt} />
               </button>
             );
           })}
-          <div style={{ fontSize: 12, color: C.silver, marginTop: 4 }}>Select all that apply</div>
+          {picks.includes(OTHER_OPTION_ID) && (
+            <input
+              type="text"
+              value={otherText || ""}
+              onChange={(e) => onOtherTextChange(e.target.value)}
+              maxLength={OTHER_TEXT_MAX}
+              placeholder="Briefly describe it"
+              autoFocus
+              style={{
+                width: "100%", padding: "14px 20px", fontSize: 15, fontFamily: "'DM Sans', sans-serif",
+                border: `1px solid ${C.mist}`, borderRadius: 4, background: C.white,
+                color: C.navy, outline: "none", transition: "border-color 0.2s",
+              }}
+              onFocus={(e) => e.target.style.borderColor = C.orange}
+              onBlur={(e) => e.target.style.borderColor = C.mist}
+            />
+          )}
+          <div style={{ fontSize: 12, color: C.silver, marginTop: 4 }}>
+            {q.maxPicks ? `Pick up to ${q.maxPicks}` : "Select all that apply"}
+          </div>
         </div>
       )}
 
@@ -822,7 +592,7 @@ function ReportSummary({ ra }) {
 
 // Results screen
 function Results({ score, maxScore, revenue, leaks, answers, benchmarks, reportAnswers }) {
-  const displayScore = Math.round((score / maxScore) * 100);
+  const displayScore = maxScore ? Math.round((score / maxScore) * 100) : 0;
   // For URL-loaded reports, leak entries don't carry score/maxPts —
   // only active leaks ever made it into the URL, so include them all.
   const activeLeaks = leaks.filter(l =>
@@ -1251,8 +1021,8 @@ export default function App() {
     };
   });
 
-  // Session ID to track partial submissions
-  const [sessionId] = useState(() => "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
+  // Session ID to track partial submissions. Off production it starts with "test_" so test rows are easy to filter in the sheet.
+  const [sessionId] = useState(() => (isProduction() ? "s_" : "test_s_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
 
   // Google Sheets webhook URL
   const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby8qdZmUuZfouBH-4Uloc3O5A4TxP7batJxggqQRAypROG77LysGPteo3HXV556J4croQ/exec";
@@ -1305,7 +1075,7 @@ export default function App() {
     const val = answers[q.id];
     if (q.type === "longtext" || q.type === "shorttext") return val && val.trim().length > 0;
     if (q.type === "single" || q.type === "single_with_input") return val !== undefined;
-    if (q.type === "multiselect") return val && val.length > 0;
+    if (q.type === "multi") return val && val.length > 0;
     return false;
   };
 
@@ -1387,7 +1157,7 @@ export default function App() {
     setScreen("results");
 
     // Send final data with email, score, and completed flag
-    const displayScore = Math.round((totalScore / maxScore) * 100);
+    const displayScore = maxScore ? Math.round((totalScore / maxScore) * 100) : 0;
 
     // Identify user and track submission
     analytics.identifyUser(emailData.email, {
@@ -1530,24 +1300,27 @@ export default function App() {
 
     console.log("[EmailJS] Sending with:", { serviceId, templateId, publicKey: publicKey ? "set" : "MISSING" });
 
-    // HubSpot contact creation
-    const hsFields = [{ name: "email", value: emailData.email }];
-    if (emailData.firstName) hsFields.push({ name: "firstname", value: emailData.firstName });
-    if (emailData.company)   hsFields.push({ name: "company", value: emailData.company });
+    // HubSpot and EmailJS run on production only; previews and localhost skip them
+    if (isProduction()) {
+      // HubSpot contact creation
+      const hsFields = [{ name: "email", value: emailData.email }];
+      if (emailData.firstName) hsFields.push({ name: "firstname", value: emailData.firstName });
+      if (emailData.company)   hsFields.push({ name: "company", value: emailData.company });
 
-    fetch("https://api.hsforms.com/submissions/v3/integration/submit/245806817/62f93bdb-38db-418b-a40a-c8a807f75949", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fields: hsFields,
-        context: { pageUri: "https://scorecard.parkridgeadvisory.com", pageName: "Pipeline Scorecard" },
-      }),
-    }).catch(() => {});
+      fetch("https://api.hsforms.com/submissions/v3/integration/submit/245806817/62f93bdb-38db-418b-a40a-c8a807f75949", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fields: hsFields,
+          context: { pageUri: "https://scorecard.parkridgeadvisory.com", pageName: "Pipeline Scorecard" },
+        }),
+      }).catch(() => {});
 
-    // Email to the lead (Tom receives a copy via BCC in EmailJS template settings)
-    emailjs.send(serviceId, templateId, emailParams, publicKey)
-      .then(() => console.log("[EmailJS] Email sent OK"))
-      .catch((err) => console.error("[EmailJS] Email failed:", err));
+      // Email to the lead (Tom receives a copy via BCC in EmailJS template settings)
+      emailjs.send(serviceId, templateId, emailParams, publicKey)
+        .then(() => console.log("[EmailJS] Email sent OK"))
+        .catch((err) => console.error("[EmailJS] Email failed:", err));
+    }
   };
 
   return (
@@ -1595,6 +1368,8 @@ export default function App() {
               setInputValues({ ...inputValues, [qId]: updated });
               setAnswers({ ...answers, [`${qId}_input_${fi}`]: val });
             }}
+            otherText={answers[OTHER_TEXT_KEY]}
+            onOtherTextChange={(val) => setAnswers({ ...answers, [OTHER_TEXT_KEY]: val })}
             onNext={handleNext}
             onBack={handleBack}
             canProceed={canProceed()}

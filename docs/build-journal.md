@@ -66,3 +66,59 @@ docs/specs/ (b1784a4). No app code changed.
 - Shared report links (`?r=1&nm=...&em=...`) carry the lead's name and email in the URL.
   M2 should replace them with a private results link.
 - The Google Sheets webhook accepts posts from anyone, so fake rows are possible.
+
+## 2026-10-29: Step 2, question config and preview guard
+
+**Built**
+- src/scorecard/questions.ts: the 11 locked questions, copied from the handoff spec, with
+  stable question and option ids. Option ids follow the cost model keys; Q11 ids match the
+  .py HOURS keys. Q1 "Other" text is stored as `challenges_other` (max 120 chars, optional).
+- App.jsx: old 16-question array removed; QuestionView renders the new config (option ids,
+  question and option help text, max picks with dimmed options at the limit, "Pick up to 3"
+  hint, Q1 Other text box). Old scoring, results and report URL code left in place; the two
+  score divisions are guarded, so the branch shows score 0 and no leaks until Steps 3 and 7.
+- Preview guard: src/scorecard/env.ts `isProduction()` is an exact hostname match on
+  scorecard.parkridgeadvisory.com. Off production: Meta Pixel and the HubSpot tracking
+  script (index.html), Mixpanel (analytics.js), HubSpot form POST and EmailJS (App.jsx) are
+  skipped. Sheets still posts, with session ids starting `test_`.
+- Tooling: TypeScript 6.0 (typescript-eslint supports <6.1), typescript-eslint, Vitest 4.1
+  (Vitest 5 does not support local Node 25). `npm run typecheck`, `npm test`.
+- Tests: 23 passing. They include a cross-check that parses the spec markdown and compares
+  every prompt, option label and help text; verified it fails when a label is changed.
+
+**Why these choices**
+- Hostname over VITE_VERCEL_ENV: no dependency on Vercel settings, and a misfire can only
+  turn tracking off on a non-production host, never on the live domain.
+- `test_` session prefix over new Sheets keys: the Apps Script ignores unknown keys, so new
+  keys would vanish without a hand redeploy. The prefix needs no script change and leaves
+  production payloads identical.
+
+**Vercel (from Tom)**
+- Team slug tom-8931s-projects; production branch main; preview env vars set.
+- Production domains: scorecard.parkridgeadvisory.com and
+  parkridge-scorecard-git-main-tom-8931s-projects.vercel.app (treated as non-production).
+- Step 6 CORS allowlist: https://scorecard.parkridgeadvisory.com and
+  ^https://parkridge-scorecard-[a-z0-9-]+-tom-8931s-projects\.vercel\.app$ only.
+  CORS is not the protection for a public endpoint; validation and rate limits are.
+
+**Google Sheets (Apps Script read)**
+- doPost upserts by session_id (column A) and writes fixed keys to fixed columns 1-26;
+  unknown keys are dropped. sendToSheet() is unchanged, and v2 answer ids do not collide
+  with old keys, so v2 rows fill columns 1-7 and 26 only.
+- M2 PREREQUISITE: before merging to main, add v2 answer keys to sendToSheet and new
+  columns 27+ to the Apps Script (Tom redeploys), or production rows lose all answers.
+- Apps Script issues for Tom (not changed in M1): setValue treats strings starting with
+  "=" as formulas, and the HYPERLINK for report_url is string-concatenated, so the public
+  webhook allows formula injection; prefix such values with '. The live app sends
+  q4_marketing_spend and q8b_deals_closed_90d, which the script never writes.
+
+**Anything Tom needs to know**
+- /insurance on preview still sends its own HubSpot form and EmailJS (InsuranceApp.jsx is
+  off limits). Do not test /insurance on preview. A visitor with JavaScript disabled still
+  fires the Pixel noscript image; that cannot be gated without JS.
+- Lint already failed on main with 10 errors (react-hooks/static-components,
+  no-unused-vars, react-refresh). Step 2 adds none; they are left alone per the
+  no-refactor rule.
+- Copy flagged for M2: the intro's "5-minute assessment", "Pipeline Health Score" and
+  "Benchmark Comparison", and the contact step's "your score".
+- Q10 labels and help text are shown exactly as the spec writes them (lowercase help).

@@ -1,15 +1,21 @@
 import mixpanel from 'mixpanel-browser';
+import { isProduction } from '../scorecard/env';
 
-mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN, {
-  track_pageview: "url-with-path",
-  persistence: 'localStorage'
-});
+// Mixpanel runs on production only; previews and localhost get no-op methods (see export below)
+const enabled = isProduction();
 
-// Check for mp_id in URL params (for cross-domain identity linking)
-const urlParams = new URLSearchParams(window.location.search);
-const mpId = urlParams.get('mp_id');
-if (mpId) {
-  mixpanel.identify(mpId);
+if (enabled) {
+  mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN, {
+    track_pageview: "url-with-path",
+    persistence: 'localStorage'
+  });
+
+  // Check for mp_id in URL params (for cross-domain identity linking)
+  const urlParams = new URLSearchParams(window.location.search);
+  const mpId = urlParams.get('mp_id');
+  if (mpId) {
+    mixpanel.identify(mpId);
+  }
 }
 
 const analytics = {
@@ -52,4 +58,6 @@ const analytics = {
   }
 };
 
-export default analytics;
+const disabled = Object.fromEntries(Object.keys(analytics).map((key) => [key, () => {}]));
+
+export default enabled ? analytics : disabled;

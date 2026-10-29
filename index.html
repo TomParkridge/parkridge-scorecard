@@ -7,8 +7,9 @@
     <title>The Pipeline Scorecard — Parkridge Advisory</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel Code (production only; same hostname as src/scorecard/env.ts) -->
     <script>
+    if (location.hostname === 'scorecard.parkridgeadvisory.com') {
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -19,6 +20,7 @@
     'https://connect.facebook.net/en_US/fbevents.js');
     fbq('init', '1509081197588789');
     fbq('track', 'PageView');
+    }
     </script>
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=1509081197588789&ev=PageView&noscript=1"
@@ -28,6 +30,14 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/245806817.js"></script>
+    <!-- HubSpot tracking (production only; same hostname as src/scorecard/env.ts) -->
+    <script>
+    if (location.hostname === 'scorecard.parkridgeadvisory.com') {
+      var hs = document.createElement('script');
+      hs.type = 'text/javascript'; hs.id = 'hs-script-loader';
+      hs.async = true; hs.defer = true; hs.src = '//js.hs-scripts.com/245806817.js';
+      document.body.appendChild(hs);
+    }
+    </script>
   </body>
 </html>

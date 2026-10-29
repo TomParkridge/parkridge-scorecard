@@ -122,3 +122,42 @@ docs/specs/ (b1784a4). No app code changed.
 - Copy flagged for M2: the intro's "5-minute assessment", "Pipeline Health Score" and
   "Benchmark Comparison", and the contact step's "your score".
 - Q10 labels and help text are shown exactly as the spec writes them (lowercase help).
+
+## 2026-10-29: Step 3, scoring and cost engine
+
+**Built** (src/scorecard/engine/, pure TypeScript, no UI or network, not yet wired into App.jsx)
+- tables.ts: every number and rule (lead/close/value tables, retention, the three lift
+  tables, caps, hidden threshold, hours, points, score weights, bands, the non-dollar rule).
+- rounding.ts: roundHalfEven matches Python round(x) and round(x, -2) on the exact binary
+  value (x % step is exact for doubles), roundHalfUp for the stored scores.
+- engine.ts: validateAnswers (every question answered, ids known, multi picks unique,
+  non-empty, within maxPicks; throws ScorecardInputError) and computeScorecard, a line-by-line
+  port of run2() that keeps Python's operation order, so the doubles match bit for bit.
+- Imports use explicit .ts extensions (tsconfig allowImportingTsExtensions) so the Step 6
+  Edge Function can use these files unchanged under Deno.
+- Tests: 58 passing. Spot checks match the brief: Great Install LLC $2,600-$5,200 slow
+  response; Summit Farmers Agency (insurance) $2,800-$5,400 short follow-up; NetGuard IT
+  6-10 hours. Every table's keys are checked against the option ids in questions.ts.
+
+**Decisions (Tom approved the defaults on 2026-10-29)**
+1. Hidden threshold follows run2: the UNROUNDED monthly high x 12 is compared with $6,000.
+   The brief's "yearly high" (rounded monthly x 12) differs only for a monthly high
+   between $450 and $500.
+2. topLeak is never "hours". With no dollar leak, estimate.kind = "hours" and topLeak comes
+   from the non-dollar rule. Step 4 compares run2's "hours" with estimate.kind.
+3. overallScore averages the unrounded sub-scores, then rounds half up; pipelineScore and
+   aiScore are rounded half up for storage.
+4. Non-dollar #1 leak rule: STILL PROPOSED, needs Tom's confirmation. In tables.ts:
+   - numbers_untrusted when Q9 <= 3 points; one_channel when Q2 = 1 source;
+     ai_ad_hoc when AI level <= 2. Points used for ranking are those question points.
+   - Lowest points wins; ties go to the candidate matching more Q1 picks
+     (numbers_untrusted: leads_slip, leads_not_converting; one_channel: not_enough_leads;
+     ai_ad_hoc: ai_where_to_start, manual_work), then to that list order. None -> "none".
+   - NetGuard IT and Shield Pest Control both come out "none".
+
+**Anything Tom needs to know**
+- The run2 personas have no Q1 answers, so the Step 4 fixtures need a Q1 pick per persona.
+  It only affects the non-dollar tie-break, and only NetGuard and Shield have no dollar
+  leak; both are "none" regardless.
+- The build prints a parse5 notice about the Meta Pixel <noscript> in <head>. main prints
+  it too; it is harmless.

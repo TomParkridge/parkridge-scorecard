@@ -48,3 +48,21 @@ docs/specs/ (b1784a4). No app code changed.
 **Noted, not fixed**
 - calcRevenueLeak() reads answers.lead_volume, which no question sets anymore, so the live
   estimate always assumes 20 leads/month. The Step 3 engine replaces it.
+
+**Tom's decisions (2026-10-29)**
+- Storage: option (a) approved. `scorecard-submit` builds its own Supabase client from the
+  runtime variables, writes the row first, then lazily loads logEvent. Add `lead_created`
+  to EventName. No ADMIN_API_TOKEN.
+- The Edge Function recomputes the estimate and all scores server-side from the raw answers
+  with the same engine. It never trusts computed values sent by the browser.
+- TypeScript for src/scorecard/ only; Vitest as a dev dependency.
+- Preview deploys: Meta Pixel, HubSpot, EmailJS and Mixpanel off. Supabase and Sheets still
+  written, rows marked as tests. Production behavior unchanged. Additive changes only.
+- Sheets payload stays unchanged until Tom shares the Apps Script code.
+- InsuranceApp.jsx and the /insurance routes are not touched in M1.
+- Step 2 changes to App.jsx stay minimal: wire in the question config, no refactor.
+
+**For M2**
+- Shared report links (`?r=1&nm=...&em=...`) carry the lead's name and email in the URL.
+  M2 should replace them with a private results link.
+- The Google Sheets webhook accepts posts from anyone, so fake rows are possible.

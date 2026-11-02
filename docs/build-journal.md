@@ -359,3 +359,26 @@ docs/specs/ (b1784a4). No app code changed.
 - Slack delivery of lead_created. The Slack connector cannot see the channel or the messages, so
   this needs Tom's eyes on #ai-alerts and the assessment.events query.
 - The is_test = false path on the live endpoint: first check at production launch in M2.
+
+**Step 6 closed by Tom (2026-11-02)**
+- Query 1 matched: 10 test rows, 10 marked test, 1 distinct hash, 0 replay rows, 10 response rows,
+  10 lead_created events, 0 slack_failed in the last day.
+- The rate limit is per visitor: Tom's phone submission on cellular is the newest row (is_test
+  true, utm_source phonetest, has_answers true) with a different ip_prefix from the smoke rows.
+- Slack: 0 slack_failed rows means the webhook accepted the posts. Tom's confirmation still had
+  template text ("[or: Slack messages did not arrive]"), so seeing them in #ai-alerts is unconfirmed.
+
+## Pre-launch list (before M2 goes live)
+- Switch the ip_hash HMAC key from the service role key to a dedicated secret (Tom, 2026-11-02).
+  Generate it straight into a gitignored env file without printing it, set it with supabase
+  secrets set --env-file, then redeploy scorecard-submit. Rate limit counts reset for the current
+  hour; nothing else changes.
+- Add the v2 answer keys to sendToSheet and new columns 27+ to the Apps Script, which Tom redeploys,
+  or production Sheets rows lose all answers.
+- Fix the Apps Script formula injection: prefix values starting with "=" with '. The webhook is
+  public and this is live today, independent of v2.
+- Replace the shared report links, which carry the lead's name and email in the URL.
+- Merge m1-scorecard-storage to main in the paid repo, and run
+  node scripts/sync-engine-to-assessment.mjs --check to confirm the deployed engine matches.
+- First check after launch: a real submission from the production domain has is_test = false.
+- Decide whether to clear the smoke-test rows (smoke-test@example.com) and the phonetest row.

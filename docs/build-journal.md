@@ -161,3 +161,37 @@ docs/specs/ (b1784a4). No app code changed.
   leak; both are "none" regardless.
 - The build prints a parse5 notice about the Meta Pixel <noscript> in <head>. main prints
   it too; it is harmless.
+
+## 2026-11-02: Tom's decisions on the #1 leak and the cost tables
+
+**Tom's decisions (2026-11-02)**
+1. Non-dollar #1 leak rule approved, with one_channel removed. This replaces the proposal in
+   the Step 3 entry. Candidates: numbers_untrusted (Q9 <= 3 points) and ai_ad_hoc (AI level
+   <= 2). Lowest points wins, ties go to the candidate matching more Q1 picks, none -> "none".
+2. untapped_database can be #1 only when it is the only dollar leak.
+3. The lift ranges and the hours table are final for launch. No numbers changed.
+
+**Built**
+- tables.ts: one_channel removed from NON_DOLLAR_LEAKS and NonDollarLeakId; a
+  topOnlyWhenAlone flag on the untapped_database entry in DOLLAR_LEAKS; comments mark the lift
+  and hours tables final.
+- engine.ts: rankDollarLeaks() applies the flag after taking the top two, so the leak stays in
+  the combined estimate and only gives up the #1 slot. The dead Q2 input to the non-dollar
+  rule is gone. Q2 still counts toward pipelineScore.
+- Tests: the old non-dollar test relied on one_channel and was replaced.
+
+**Anything Tom needs to know**
+- Decision 2 changes no result today. Old leads tops out at a 10% high-end lift, every other
+  dollar leak starts at 10% or more, and the tie at 10% already goes to slow response. The flag
+  protects the rule if the lift tables are tuned later. run2() and the Step 4 fixtures still
+  agree, and Benson & Cole Law keeps old leads as #1 because it is that firm's only dollar leak.
+- Decision 1 affects only businesses with no dollar leak and one lead source. Where one_channel
+  used to win, they now get the next qualifying leak, or "none" with a connected CRM and AI
+  level 3 or higher.
+- Not specified by Tom, kept from the proposal: when Q1 picks also tie, table order decides,
+  so numbers_untrusted wins. not_enough_leads no longer breaks any tie.
+- Specs not updated, so they still show these items as open or proposed: the M1 brief (Step 3),
+  the handoff (Open items), cost-model-and-simulation.md and results-page-approved.md.
+- M2: the leak lookup table in results-page-approved.md still has a One-channel dependence row,
+  which can no longer be used, and has no copy for topLeak "none". NetGuard IT and Shield Pest
+  Control both land on "none", so the page needs copy for that case.

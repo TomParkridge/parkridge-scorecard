@@ -136,6 +136,16 @@ function topNonDollarLeak(points: Record<string, number>, challenges: string[]):
   return ranked.length ? ranked[0].id : 'none';
 }
 
+// Rank by high-end lift; a stable sort keeps DOLLAR_LEAKS order on ties. After taking the top
+// two, a topOnlyWhenAlone leak moves behind the other. The combined lift is the same either way.
+export function rankDollarLeaks(leaks: DollarLeak[]): DollarLeak[] {
+  const topOnlyWhenAlone = (leak: DollarLeak) => (DOLLAR_LEAKS.find((l) => l.id === leak.id)?.topOnlyWhenAlone ? 1 : 0);
+  return [...leaks]
+    .sort((a, b) => b.liftHigh - a.liftHigh)
+    .slice(0, MAX_DOLLAR_LEAKS)
+    .sort((a, b) => topOnlyWhenAlone(a) - topOnlyWhenAlone(b));
+}
+
 export function computeScorecard(answers: ScorecardAnswers, surveyVersion: SurveyVersion): ScorecardResult {
   validateAnswers(answers, surveyVersion);
 
@@ -158,13 +168,12 @@ export function computeScorecard(answers: ScorecardAnswers, surveyVersion: Surve
   if (surveyVersion === 'insurance') value = value * RETENTION;
   const monthlyRevenue = pick(LEADS_MID, answers.monthly_leads) * pick(CLOSE_RATE, answers.close_rate) * value;
 
-  // Dollar leaks: rank by high-end lift; a stable sort keeps DOLLAR_LEAKS order on ties
-  const dollarLeaks: DollarLeak[] = DOLLAR_LEAKS
-    .map((leak) => ({ id: leak.id, lift: pick(leak.lifts, answers[leak.question as keyof ScorecardAnswers] as string) }))
-    .filter((l): l is { id: DollarLeakId; lift: readonly [number, number] } => l.lift !== null)
-    .map((l) => ({ id: l.id, liftLow: l.lift[0], liftHigh: l.lift[1] }))
-    .sort((a, b) => b.liftHigh - a.liftHigh)
-    .slice(0, MAX_DOLLAR_LEAKS);
+  const dollarLeaks: DollarLeak[] = rankDollarLeaks(
+    DOLLAR_LEAKS
+      .map((leak) => ({ id: leak.id, lift: pick(leak.lifts, answers[leak.question as keyof ScorecardAnswers] as string) }))
+      .filter((l): l is { id: DollarLeakId; lift: readonly [number, number] } => l.lift !== null)
+      .map((l) => ({ id: l.id, liftLow: l.lift[0], liftHigh: l.lift[1] })),
+  );
 
   const scores = {
     pipelineScore: roundHalfUp(pipelineRaw),
@@ -180,7 +189,7 @@ export function computeScorecard(answers: ScorecardAnswers, surveyVersion: Surve
       surveyVersion,
       monthlyRevenue,
       topLeak: topNonDollarLeak(
-        { lead_tracking: trackingPoints, lead_channels: channelPoints, ai_level: aiLevel },
+        { lead_tracking: trackingPoints, ai_level: aiLevel },
         answers.challenges,
       ),
       dollarLeaks,

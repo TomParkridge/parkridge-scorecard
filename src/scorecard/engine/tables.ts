@@ -36,7 +36,7 @@ export const CUSTOMER_VALUE: Record<string, number> = {
 // Insurance: annual commission x three years at 85% retention = 2.5725. Same expression as the .py.
 export const RETENTION = 1 + 0.85 + 0.85 ** 2;
 
-// Lift if fixed, per answer. null = not a leak.
+// Lift if fixed, per answer. null = not a leak. Final for launch (Tom, 2026-11-02).
 export const RESPONSE_LIFT: Record<string, Lift | null> = {
   '5_min': null,
   '15_min': null,
@@ -64,10 +64,16 @@ export const REACTIVATION_LIFT: Record<string, Lift | null> = {
 export type DollarLeakId = 'slow_response' | 'short_follow_up' | 'untapped_database';
 
 // Array order is the tie-break when two leaks have the same high-end lift.
-export const DOLLAR_LEAKS: readonly { id: DollarLeakId; question: string; lifts: Record<string, Lift | null> }[] = [
+// topOnlyWhenAlone: the leak can be #1 only when it is the only dollar leak (Tom, 2026-11-02).
+export const DOLLAR_LEAKS: readonly {
+  id: DollarLeakId;
+  question: string;
+  lifts: Record<string, Lift | null>;
+  topOnlyWhenAlone?: boolean;
+}[] = [
   { id: 'slow_response', question: 'response_speed', lifts: RESPONSE_LIFT },
   { id: 'short_follow_up', question: 'follow_up_attempts', lifts: FOLLOW_UP_LIFT },
-  { id: 'untapped_database', question: 'old_leads', lifts: REACTIVATION_LIFT },
+  { id: 'untapped_database', question: 'old_leads', lifts: REACTIVATION_LIFT, topOnlyWhenAlone: true },
 ];
 
 export const MAX_DOLLAR_LEAKS = 2;
@@ -77,7 +83,7 @@ export const ROUND_TO = 100;
 // Below this (unrounded monthly high x 12, as in run2) the page hides the dollar figure.
 export const HIDDEN_YEARLY_THRESHOLD = 6000;
 
-// Q11 time sinks: hours a week, used when there is no dollar leak
+// Q11 time sinks: hours a week, used when there is no dollar leak. Final for launch (Tom, 2026-11-02).
 export const HOURS: Record<string, Lift> = {
   leads: [2, 4],
   quotes: [3, 5],
@@ -152,19 +158,18 @@ export const BANDS: readonly { id: BandId; min: number }[] = [
 ];
 
 // ---------- #1 leak when there is no dollar leak ----------
-// PROPOSED in the M1 brief, awaiting Tom's confirmation (see docs/build-journal.md, Step 3).
+// Approved by Tom on 2026-11-02, without the proposed one_channel candidate (see docs/build-journal.md).
 // A leak qualifies when its question scores at or below maxPoints. Lowest points wins; ties go
 // to the leak matching more Q1 challenge picks, then to array order. None qualify -> "none".
 
-export type NonDollarLeakId = 'numbers_untrusted' | 'one_channel' | 'ai_ad_hoc';
+export type NonDollarLeakId = 'numbers_untrusted' | 'ai_ad_hoc';
 
 export const NON_DOLLAR_LEAKS: readonly {
   id: NonDollarLeakId;
-  question: 'lead_tracking' | 'lead_channels' | 'ai_level';
+  question: 'lead_tracking' | 'ai_level';
   maxPoints: number;
   challenges: readonly string[];
 }[] = [
   { id: 'numbers_untrusted', question: 'lead_tracking', maxPoints: 3, challenges: ['leads_slip', 'leads_not_converting'] },
-  { id: 'one_channel', question: 'lead_channels', maxPoints: 1, challenges: ['not_enough_leads'] },
   { id: 'ai_ad_hoc', question: 'ai_level', maxPoints: 2, challenges: ['ai_where_to_start', 'manual_work'] },
 ];

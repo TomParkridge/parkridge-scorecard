@@ -1,7 +1,7 @@
 // Smoke checks for the engine. The full 20-business fixtures from run2() arrive in Step 4.
 import { describe, expect, it } from 'vitest';
 import { QUESTIONS } from '../questions.ts';
-import { bandFor, computeScorecard, ScorecardInputError, validateAnswers } from './engine.ts';
+import { bandFor, computeScorecard, rankDollarLeaks, ScorecardInputError, validateAnswers } from './engine.ts';
 import type { ScorecardAnswers } from './engine.ts';
 import {
   AI_LEVEL,
@@ -135,19 +135,6 @@ describe('computeScorecard spot checks', () => {
     expect(r.estimate.monthlyHigh).toBe(100); // 52.5 rounded; still stored
   });
 
-  it('picks the proposed non-dollar leak when there is no dollar leak', () => {
-    const noDollar = { response_speed: '5_min', follow_up_attempts: '7_plus', old_leads: 'regular' };
-    // Q9 spreadsheet (1 point) beats one channel (1 point) on Q1 picks: leads_slip matches numbers_untrusted
-    const tied = computeScorecard(
-      { ...greatInstall, ...noDollar, lead_channels: ['referrals'], lead_tracking: 'spreadsheet_inbox', ai_level: 'level_3', challenges: ['leads_slip'] },
-      'general',
-    );
-    expect(tied.topLeak).toBe('numbers_untrusted');
-    // AI level 0 has the lowest points
-    const ai = computeScorecard({ ...greatInstall, ...noDollar, lead_tracking: 'crm_fuzzy', ai_level: 'level_0' }, 'general');
-    expect(ai.topLeak).toBe('ai_ad_hoc');
-  });
-
   it('averages the unrounded sub-scores', () => {
     // pipeline 1/16 -> 6.25, AI 4*10 + 4*12 = 88, overall 47.125 -> 47
     const r = computeScorecard(
@@ -155,6 +142,93 @@ describe('computeScorecard spot checks', () => {
       'general',
     );
     expect([r.pipelineScore, r.aiScore, r.overallScore, r.band]).toEqual([6, 88, 47, 'solid_base']);
+  });
+});
+
+describe('#1 leak when there is no dollar leak', () => {
+  const noDollar = { ...greatInstall, response_speed: '5_min', follow_up_attempts: '7_plus', old_leads: 'regular' };
+  const topLeak = (answers: Partial<ScorecardAnswers>) => computeScorecard({ ...noDollar, ...answers }, 'general').topLeak;
+
+  it('only has numbers_untrusted and ai_ad_hoc as candidates', () => {
+    expect(NON_DOLLAR_LEAKS.map((l) => l.id)).toEqual(['numbers_untrusted', 'ai_ad_hoc']);
+  });
+
+  it('picks the lowest points', () => {
+    expect(topLeak({ lead_tracking: 'crm_fuzzy', ai_level: 'level_0' })).toBe('ai_ad_hoc');
+    expect(topLeak({ lead_tracking: 'none', ai_level: 'level_2' })).toBe('numbers_untrusted');
+  });
+
+  it('breaks a points tie with the Q1 picks', () => {
+    // Spreadsheet and AI level 1 both score 1 point
+    const tied = { lead_tracking: 'spreadsheet_inbox', ai_level: 'level_1' };
+    expect(topLeak({ ...tied, challenges: ['leads_slip'] })).toBe('numbers_untrusted');
+    expect(topLeak({ ...tied, challenges: ['manual_work'] })).toBe('ai_ad_hoc');
+    expect(topLeak({ ...tied, challenges: ['manual_work', 'ai_where_to_start', 'leads_slip'] })).toBe('ai_ad_hoc');
+  });
+
+  it('falls back to table order when the Q1 picks also tie', () => {
+    const tied = { lead_tracking: 'spreadsheet_inbox', ai_level: 'level_1' };
+    expect(topLeak({ ...tied, challenges: ['not_enough_leads'] })).toBe('numbers_untrusted');
+    expect(topLeak({ ...tied, challenges: ['leads_slip', 'manual_work'] })).toBe('numbers_untrusted');
+  });
+
+  it('never returns one_channel: a single lead source alone is "none"', () => {
+    expect(topLeak({ lead_channels: ['referrals'], lead_tracking: 'crm_connected', ai_level: 'level_3', challenges: ['not_enough_leads'] })).toBe('none');
+  });
+
+  it('a single lead source does not displace a qualifying leak', () => {
+    expect(topLeak({ lead_channels: ['referrals'], lead_tracking: 'crm_connected', ai_level: 'level_2', challenges: ['not_enough_leads'] })).toBe('ai_ad_hoc');
+  });
+
+  it('is "none" just past each threshold', () => {
+    expect(topLeak({ lead_tracking: 'crm_connected', ai_level: 'level_3' })).toBe('none');
+  });
+});
+
+describe('untapped_database as the #1 leak', () => {
+  const oldLeads = { id: 'untapped_database', liftLow: 0.2, liftHigh: 0.45 } as const;
+  const response = { id: 'slow_response', liftLow: 0.05, liftHigh: 0.1 } as const;
+  const followUp = { id: 'short_follow_up', liftLow: 0.1, liftHigh: 0.2 } as const;
+
+  it('takes #1 when it is the only dollar leak (Benson & Cole Law)', () => {
+    const r = computeScorecard(
+      {
+        ...greatInstall,
+        monthly_leads: '25_50',
+        response_speed: '15_min',
+        follow_up_attempts: '4_6',
+        close_rate: '2_3',
+        customer_value: '10k_50k',
+        old_leads: 'now_and_then',
+      },
+      'general',
+    );
+    expect(r.topLeak).toBe('untapped_database');
+    expect(r.dollarLeaks.map((l) => l.id)).toEqual(['untapped_database']);
+    expect([r.estimate.monthlyLow, r.estimate.monthlyHigh]).toEqual([2200, 4400]);
+  });
+
+  it('holds across every Q4, Q5 and Q8 answer', () => {
+    for (const response_speed of optionIds('response_speed')) {
+      for (const follow_up_attempts of optionIds('follow_up_attempts')) {
+        for (const old_leads of optionIds('old_leads')) {
+          const r = computeScorecard({ ...greatInstall, response_speed, follow_up_attempts, old_leads }, 'general');
+          if (r.dollarLeaks.length > 1) expect(r.topLeak).not.toBe('untapped_database');
+          if (r.topLeak === 'untapped_database') expect(r.dollarLeaks).toHaveLength(1);
+        }
+      }
+    }
+  });
+
+  it('gives slow response the tie at a 10% high-end lift', () => {
+    const r = computeScorecard({ ...greatInstall, response_speed: '1_hour', follow_up_attempts: '4_6', old_leads: 'rarely_never' }, 'general');
+    expect(r.dollarLeaks.map((l) => l.id)).toEqual(['slow_response', 'untapped_database']);
+  });
+
+  it('stays out of #1 even if tuning gives it the highest lift, but still counts in the top two', () => {
+    expect(rankDollarLeaks([response, followUp, oldLeads]).map((l) => l.id)).toEqual(['short_follow_up', 'untapped_database']);
+    expect(rankDollarLeaks([oldLeads, response]).map((l) => l.id)).toEqual(['slow_response', 'untapped_database']);
+    expect(rankDollarLeaks([oldLeads]).map((l) => l.id)).toEqual(['untapped_database']);
   });
 });
 

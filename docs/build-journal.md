@@ -230,3 +230,52 @@ docs/specs/ (b1784a4). No app code changed.
   numbers.
 - run2() does not compute stored scores, so those are checked against the brief's formula by
   hand-worked unit tests, not against the Python model.
+
+## 2026-11-02: Step 5, what each submission stores
+
+**Tom's decisions (2026-11-02, plan approved)**
+- The same email submitting twice creates a new lead row each time. The public endpoint never
+  updates or merges a row. Emails are unverified, so updating by email would let anyone who
+  knows a client's address overwrite that client's record, even on a lead with a paid order.
+
+**Built**
+- src/scorecard/submission.ts: pure buildSubmissionRows() returns { lead, response }. It
+  validates, recomputes with computeScorecard and ignores any computed value sent by the
+  browser. Only known question ids reach scorecard_responses.answers, plus challenges_other
+  when Other is picked.
+- Migration 003 in ~/parkridge-assessment (branch m1-scorecard-storage, not pushed): adds
+  referrer, landing_path, session_id and is_test to assessment.leads, and a unique constraint
+  on session_id. Lead type in src/lib/types.ts updated to match.
+- Tests: 120 passing here, all five paid-repo checks pass. Migration tested on PGlite with 001,
+  002, 003: 13 checks, including a second run changing nothing and a retry not overwriting.
+- No live row is written yet. The endpoint is Step 6.
+
+**Why these choices**
+- session_id only stops a double-tap or retry creating a second row. A retake is a new page
+  load, so it gets a new id and a new row.
+- Email is stored trimmed and lowercased, so rows for one person group together.
+- est_leak_*_cents hold the monthly range. Yearly is that x 12.
+- estimateKind is stored in the existing leaks jsonb because the cents cannot tell hidden from
+  shown: $480 (hidden) and $510 (shown) both round to $500.
+- Referrer and landing path sit on leads beside the UTMs. Raw answers and the Q1 Other text go
+  in scorecard_responses.answers, which needs no new columns.
+- is_test will be set by the server from the request's origin (Step 6), never by the browser.
+- Lead row is written first, then the response row, with no transaction. If the second write
+  fails, the lead is kept and an alert goes to Slack, but those raw answers are lost. Keeping
+  the lead matters more, and this needs no database function.
+
+**Anything Tom needs to know**
+- STILL TO DO BY HAND: run 003 in the Supabase SQL editor before Step 6 is deployed. It has
+  only run on PGlite, not on the live database.
+- M2 rule: an order must attach to a specific lead id from the results link, never by looking
+  up an email. Stripe's confirmed email is the first verified one.
+- Counting people means counting distinct emails, and reports should filter on not is_test.
+  Deleting someone's data must cover every row for that email.
+- Not changed: HubSpot's form merges by email, so an unverified submission can already overwrite
+  a contact's first name and company, and EmailJS sends to whatever address is typed.
+- The contact form only collects a first name, so leads.name holds a first name. The handoff
+  says "name" and the results page wants a full name. Flagged for M2.
+- For the Step 6 plan: the paid repo's hard rule 3 bans insurance terms and it is clean today,
+  but the engine contains insurance logic and has to run in that repo's Edge Function.
+- The preview URL redirects to Vercel login (Vercel Authentication is on), so only signed-in
+  team members can open it.

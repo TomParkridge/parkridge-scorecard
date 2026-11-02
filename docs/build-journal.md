@@ -279,3 +279,12 @@ docs/specs/ (b1784a4). No app code changed.
   but the engine contains insurance logic and has to run in that repo's Edge Function.
 - The preview URL redirects to Vercel login (Vercel Authentication is on), so only signed-in
   team members can open it.
+
+**Tom's follow-up (2026-11-02)**
+- First name only is settled: the contact form stays as is, and M2 uses "{First name},
+  {Company}" on the Snapshot cover. results-page-approved.md still lists a full name, so update
+  it in M2.
+- Migration 003 is held for review: do not push or merge m1-scorecard-storage until Tom says so.
+- Step 6 plan: Tom's preferred fix for the insurance conflict is to amend hard rule 3 in the paid
+  repo's CLAUDE.md to allow insurance terms only in the shared scorecard engine files
+  (survey_version "insurance" and its multiplier). The ban stays everywhere else.

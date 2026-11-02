@@ -382,3 +382,29 @@ docs/specs/ (b1784a4). No app code changed.
   node scripts/sync-engine-to-assessment.mjs --check to confirm the deployed engine matches.
 - First check after launch: a real submission from the production domain has is_test = false.
 - Decide whether to clear the smoke-test rows (smoke-test@example.com) and the phonetest row.
+- Replace the old scoring behind the results email and the Sheets score and report_url. They are
+  still built from the old code, so they would send a score of 0 if this merged as is.
+- First check after launch: HubSpot receives a real submission. It is off on preview by design, so
+  M1 could only confirm by diff that the call is unchanged from main.
+- Remove the temporary results stub (TemporaryResultsStub.jsx, testScriptPaths.ts and their tests).
+
+## 2026-11-02: Step 7, old links, temporary results stub and test script
+
+**Built**
+- src/scorecard/TemporaryResultsStub.jsx: plain results marked temporary in the code and on screen.
+  It shows the estimate and top leak, labels the hidden case, and never shows score or band.
+- App.jsx: computes the engine result in handleSubmit inside a try, and shows the stub only when
+  that result exists and the host is not production. Old scoring, report URL, email and Sheets code
+  are unchanged, per the no-refactor rule.
+- src/scorecard/testScriptPaths.ts and its test pin the three manual test paths through
+  buildSubmissionRows, so the script's expected rows cannot be wrong or drift.
+
+**Old links: no redirects were needed**
+- Git history shows the app has only ever had / and /insurance, and vercel.json sends every path to
+  the app, so there are no old quiz URLs to redirect. The brief expected some.
+- Shared report links (?r=1) never run handleSubmit, so they always get the old report.
+
+**Anything Tom needs to know**
+- The UI could not be clicked through from Claude's side. Tests cover the stub's rendering and the
+  engine values; Tom's script is the real end-to-end test.
+- M1 results are pending Tom's test script.

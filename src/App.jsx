@@ -4,6 +4,8 @@ import analytics from "./utils/analytics";
 import { QUESTIONS, OTHER_OPTION_ID, OTHER_TEXT_KEY, OTHER_TEXT_MAX, HONEYPOT_FIELD } from "./scorecard/questions";
 import { sendSubmission } from "./scorecard/submit";
 import { captureTraffic } from "./scorecard/traffic";
+import { computeScorecard } from "./scorecard/engine";
+import TemporaryResultsStub from "./scorecard/TemporaryResultsStub";
 import { isProduction } from "./scorecard/env";
 
 // ============================================================
@@ -1037,6 +1039,8 @@ export default function App() {
   // Session ID to track partial submissions. Off production it starts with "test_" so test rows are easy to filter in the sheet.
   const [sessionId] = useState(() => (isProduction() ? "s_" : "test_s_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
   const [traffic] = useState(() => captureTraffic());
+  // Temporary (M1): undefined until a quiz is submitted, so shared report links never reach the stub
+  const [stubResult, setStubResult] = useState(undefined);
 
   // Google Sheets webhook URL
   const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby8qdZmUuZfouBH-4Uloc3O5A4TxP7batJxggqQRAypROG77LysGPteo3HXV556J4croQ/exec";
@@ -1168,6 +1172,12 @@ export default function App() {
     const revenue = calcRevenueLeak(answers);
 
     setResults({ score: totalScore, maxScore, leaks: leakScores, revenue, benchmarks });
+    // Temporary (M1): the engine result for the preview stub. Removed with the stub in M2.
+    try {
+      setStubResult(computeScorecard(answers, "general"));
+    } catch {
+      setStubResult(null);
+    }
     setScreen("results");
 
     // Send final data with email, score, and completed flag
@@ -1413,7 +1423,11 @@ export default function App() {
         </>
       )}
 
-      {screen === "results" && (
+      {screen === "results" && stubResult !== undefined && !isProduction() && (
+        <TemporaryResultsStub result={stubResult} />
+      )}
+
+      {screen === "results" && (stubResult === undefined || isProduction()) && (
         <Results
           score={results.score}
           maxScore={results.maxScore}

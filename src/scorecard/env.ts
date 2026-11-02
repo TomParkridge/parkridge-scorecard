@@ -5,6 +5,9 @@
 
 export const PRODUCTION_HOSTNAME = 'scorecard.parkridgeadvisory.com';
 
+// Public endpoint. The server decides from the request's origin whether a row is a test.
+export const SCORECARD_SUBMIT_URL = 'https://tknkwbfusywxxazndeks.supabase.co/functions/v1/scorecard-submit';
+
 export function isProduction(hostname: string = window.location.hostname): boolean {
   return hostname === PRODUCTION_HOSTNAME;
 }

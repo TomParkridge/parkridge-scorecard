@@ -34,6 +34,9 @@ export const OTHER_OPTION_ID = 'other';
 export const OTHER_TEXT_KEY = 'challenges_other';
 export const OTHER_TEXT_MAX = 120;
 
+/** Hidden contact-step field that only bots fill in. The odd name keeps browser autofill away from it. */
+export const HONEYPOT_FIELD = 'field_7q';
+
 export const QUESTIONS: Question[] = [
   // Your challenge
   {

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import emailjs from "@emailjs/browser";
 import analytics from "./utils/analytics";
-import { QUESTIONS, OTHER_OPTION_ID, OTHER_TEXT_KEY, OTHER_TEXT_MAX } from "./scorecard/questions";
+import { QUESTIONS, OTHER_OPTION_ID, OTHER_TEXT_KEY, OTHER_TEXT_MAX, HONEYPOT_FIELD } from "./scorecard/questions";
+import { sendSubmission } from "./scorecard/submit";
+import { captureTraffic } from "./scorecard/traffic";
 import { isProduction } from "./scorecard/env";
 
 // ============================================================
@@ -487,6 +489,17 @@ function EmailCapture({ data, onChange, onSubmit }) {
       <p style={{ fontSize: 15, color: C.navyMuted, fontWeight: 300, marginBottom: 36 }}>
         We'll email you a detailed breakdown of your score, your top revenue leaks, and how you compare to top-performing businesses.
       </p>
+      {/* Honeypot: hidden from people, filled in by bots. The server discards those submissions. */}
+      <div aria-hidden="true" style={{ position: "absolute", left: -9999, top: "auto", width: 1, height: 1, overflow: "hidden" }}>
+        <input
+          type="text"
+          name={HONEYPOT_FIELD}
+          tabIndex={-1}
+          autoComplete="off"
+          value={data[HONEYPOT_FIELD] || ""}
+          onChange={(e) => onChange(HONEYPOT_FIELD, e.target.value)}
+        />
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {[
           { key: "firstName", label: "First name", required: true },
@@ -1023,6 +1036,7 @@ export default function App() {
 
   // Session ID to track partial submissions. Off production it starts with "test_" so test rows are easy to filter in the sheet.
   const [sessionId] = useState(() => (isProduction() ? "s_" : "test_s_") + Date.now() + "_" + Math.random().toString(36).slice(2, 8));
+  const [traffic] = useState(() => captureTraffic());
 
   // Google Sheets webhook URL
   const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycby8qdZmUuZfouBH-4Uloc3O5A4TxP7batJxggqQRAypROG77LysGPteo3HXV556J4croQ/exec";
@@ -1248,6 +1262,15 @@ export default function App() {
       score: displayScore,
       completed: true,
       report_url: reportUrl.toString(),
+    });
+
+    // Save to Supabase, in the background. The server recomputes every score from the answers.
+    sendSubmission({
+      sessionId,
+      answers,
+      contact: { name: emailData.firstName, email: emailData.email, company: emailData.company },
+      traffic,
+      [HONEYPOT_FIELD]: emailData[HONEYPOT_FIELD] || "",
     });
 
     // Send email report to lead and Tom

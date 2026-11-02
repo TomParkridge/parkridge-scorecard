@@ -288,3 +288,51 @@ docs/specs/ (b1784a4). No app code changed.
 - Step 6 plan: Tom's preferred fix for the insurance conflict is to amend hard rule 3 in the paid
   repo's CLAUDE.md to allow insurance terms only in the shared scorecard engine files
   (survey_version "insurance" and its multiplier). The ban stays everywhere else.
+- Migration 003 applied by Tom and verified: column_count = 33, leads_session_id_key present.
+  Branch m1-scorecard-storage pushed, not merged.
+
+## 2026-11-02: Step 6, the scorecard-submit endpoint and traffic capture
+
+**Tom's decisions (2026-11-02, plan approved)**
+- is_test is decided by the server from the request's origin. Only
+  https://scorecard.parkridgeadvisory.com counts as real. Preview origins are allowed and marked
+  as tests; anything else, or no origin, gets 403 and no row.
+- A duplicate session_id returns the same success as a new submission and changes nothing,
+  including when that IP is over the rate limit.
+- Hard rule 3 in the paid repo's CLAUDE.md amended (Option A): the copied engine folder is the one
+  exception. It also has to cover the empty insuranceLabel field and code comments, which goes
+  slightly beyond Tom's wording. A test there enforces the ban everywhere else.
+
+**Built**
+- Paid repo (branch m1-scorecard-storage): supabase/functions/scorecard-submit/ (handler.ts holds
+  the logic and is unit-tested, index.ts is thin Deno wiring), the engine copy in
+  _shared/scorecard/, lead_created in slackFormat.ts, migration 004 (ip_hash and an index), the
+  rule 3 change and its guard test.
+- This repo: scripts/sync-engine-to-assessment.mjs (copy, and --check to catch drift),
+  src/scorecard/traffic.ts, src/scorecard/submit.ts, the endpoint URL in env.ts, and minimal
+  App.jsx changes: capture traffic, a hidden honeypot field, one send call in handleSubmit.
+- InsuranceApp.jsx, HubSpot, Sheets and EmailJS are unchanged.
+
+**Why these choices**
+- The endpoint always uses survey version "general" and reads none from the request. The insurance
+  code in the engine copy stays inactive until that fork exists.
+- index.ts builds its own Supabase client and loads logEvent only after the row is written, because
+  _shared/config.ts requires every paid-side secret at import and must not block lead capture.
+- Rate limit is counted in the database because Edge Function memory does not reliably persist:
+  10 new leads per IP per hour. If the check itself fails, the lead is still saved.
+- ip_hash is an HMAC of the IP keyed with the runtime's service role key, so there is no new secret
+  to set and the raw IP is never stored. If the key changes, the current hour's counts reset.
+- The honeypot field has a meaningless name (field_7q) because browsers autofill by name, and a
+  false positive would silently lose a real lead.
+- Long traffic values are cut short, not rejected, so a long referrer cannot lose a lead.
+
+**Anything Tom needs to know**
+- Reading window.sessionStorage can itself throw when site data is blocked. The first version of
+  traffic.ts did that outside its try and would have crashed the page on load; fixed before commit,
+  with a test.
+- A script can forge the Origin header, so a curl with the production origin would get
+  is_test = false. is_test labels our own traffic; it is not a security control.
+- Whether Supabase lets a caller override x-forwarded-for is unknown until the live check.
+- Editing questions.ts, submission.ts or the engine now needs a sync and a redeploy of
+  scorecard-submit, or the server scores with old rules. --check catches this; nothing runs it
+  automatically.

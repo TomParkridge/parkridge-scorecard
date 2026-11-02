@@ -1,4 +1,4 @@
-// Smoke checks for the engine. The full 20-business fixtures from run2() arrive in Step 4.
+// Unit tests for the engine's rules. The 20-business run2() fixtures are in cost-model.test.ts.
 import { describe, expect, it } from 'vitest';
 import { QUESTIONS } from '../questions.ts';
 import { bandFor, computeScorecard, rankDollarLeaks, ScorecardInputError, validateAnswers } from './engine.ts';
@@ -142,6 +142,96 @@ describe('computeScorecard spot checks', () => {
       'general',
     );
     expect([r.pipelineScore, r.aiScore, r.overallScore, r.band]).toEqual([6, 88, 47, 'solid_base']);
+  });
+});
+
+describe('lift caps', () => {
+  // Great Install's revenue is $14,800 a month
+  const estimate = (answers: Partial<ScorecardAnswers>) => {
+    const r = computeScorecard({ ...greatInstall, ...answers }, 'general');
+    return [r.liftLowPct, r.liftHighPct, r.estimate.monthlyLow, r.estimate.monthlyHigh];
+  };
+
+  it('caps both ends at 17.5% and 35%', () => {
+    expect(estimate({ response_speed: '1_2_days', follow_up_attempts: 'once_or_none', old_leads: 'regular' })).toEqual([18, 35, 2600, 5200]);
+  });
+
+  it('caps each end on its own: low capped, high at 34.2%', () => {
+    expect(estimate({ response_speed: 'same_day', follow_up_attempts: '4_6', old_leads: 'now_and_then' })).toEqual([18, 34, 2600, 5100]);
+  });
+
+  it('leaves a combined lift under both caps alone', () => {
+    expect(estimate({ response_speed: '1_hour', follow_up_attempts: '2_3', old_leads: 'regular' })).toEqual([15, 28, 2100, 4100]);
+  });
+
+  it('uses only the top two leaks', () => {
+    // Slow response + follow-up: 14.5-28%. Adding old leads would give a higher combined lift.
+    expect(estimate({ response_speed: '1_hour', follow_up_attempts: '2_3', old_leads: 'rarely_never' })).toEqual([15, 28, 2100, 4100]);
+  });
+});
+
+describe('half-even rounding through the engine', () => {
+  it('sends an exact $1,050 down to $1,000, where half up would give $1,100', () => {
+    const r = computeScorecard(
+      { ...greatInstall, monthly_leads: 'under_10', close_rate: '0_1', customer_value: '10k_50k', response_speed: '5_min', follow_up_attempts: 'once_or_none', old_leads: 'regular' },
+      'general',
+    );
+    expect([r.estimate.monthlyLow, r.estimate.monthlyHigh]).toEqual([1000, 2100]);
+    expect([r.estimate.yearlyLow, r.estimate.yearlyHigh]).toEqual([12000, 25200]);
+  });
+});
+
+describe('hidden threshold', () => {
+  const noOtherLeaks = { old_leads: 'regular' };
+
+  it('hides $480 a month, even though it rounds to $500, or exactly $6,000 a year', () => {
+    const r = computeScorecard(
+      { ...greatInstall, ...noOtherLeaks, monthly_leads: 'under_10', close_rate: '2_3', customer_value: '2k_10k', response_speed: '5_min', follow_up_attempts: '2_3' },
+      'general',
+    );
+    expect(r.estimate).toMatchObject({ kind: 'hidden', monthlyHigh: 500, yearlyHigh: 6000 });
+  });
+
+  it('shows $510 a month, which also rounds to $500', () => {
+    const r = computeScorecard(
+      { ...greatInstall, ...noOtherLeaks, monthly_leads: '10_25', close_rate: '2_3', customer_value: '500_2k', response_speed: 'same_day', follow_up_attempts: '4_6' },
+      'general',
+    );
+    expect(r.estimate).toMatchObject({ kind: 'dollars', monthlyHigh: 500, yearlyHigh: 6000 });
+  });
+});
+
+describe('stored scores at the band boundaries', () => {
+  const threeChannels = ['referrals', 'paid_ads', 'partners'];
+  // 3 + 1 + 1 + 2 = 7/16 -> 43.75
+  const pipelineOf7 = { lead_channels: threeChannels, response_speed: 'same_day', follow_up_attempts: '2_3', old_leads: 'now_and_then' };
+  // 3 + 4 + 4 + 4 = 15/16 -> 93.75
+  const pipelineOf15 = { lead_channels: threeChannels, response_speed: '5_min', follow_up_attempts: '7_plus', old_leads: 'regular' };
+
+  it.each([
+    // [label, answers, pipelineScore, aiScore, overallScore, band]
+    ['38.875 -> 39', { ...pipelineOf7, lead_tracking: 'spreadsheet_inbox', ai_level: 'level_2' }, 44, 34, 39, 'leaking_revenue'],
+    ['39.875 -> 40', { ...pipelineOf7, lead_tracking: 'none', ai_level: 'level_3' }, 44, 36, 40, 'solid_base'],
+    ['68.875 -> 69', { ...pipelineOf15, lead_tracking: 'crm_fuzzy', ai_level: 'level_2' }, 94, 44, 69, 'solid_base'],
+    ['69.875 -> 70', { ...pipelineOf15, lead_tracking: 'spreadsheet_inbox', ai_level: 'level_3' }, 94, 46, 70, 'ready_to_scale'],
+  ])('%s', (_, answers, pipelineScore, aiScore, overallScore, band) => {
+    const r = computeScorecard({ ...greatInstall, ...answers }, 'general');
+    expect([r.pipelineScore, r.aiScore, r.overallScore, r.band]).toEqual([pipelineScore, aiScore, overallScore, band]);
+  });
+
+  it('scores the extremes', () => {
+    const top = computeScorecard(
+      { ...greatInstall, lead_channels: ['referrals', 'paid_ads', 'organic_search', 'partners'], response_speed: '5_min', follow_up_attempts: '7_plus', old_leads: 'regular', lead_tracking: 'crm_connected', ai_level: 'level_5' },
+      'general',
+    );
+    expect([top.pipelineScore, top.aiScore, top.overallScore, top.aiLevel, top.band]).toEqual([100, 100, 100, 5, 'ready_to_scale']);
+
+    const bottom = computeScorecard(
+      { ...greatInstall, lead_channels: ['referrals'], response_speed: 'varies', follow_up_attempts: 'not_sure', old_leads: 'no_list', lead_tracking: 'none', ai_level: 'level_0' },
+      'general',
+    );
+    // One channel is the 1-point floor: 1/16 -> 6.25, overall 3.125 -> 3
+    expect([bottom.pipelineScore, bottom.aiScore, bottom.overallScore, bottom.aiLevel, bottom.band]).toEqual([6, 0, 3, 0, 'leaking_revenue']);
   });
 });
 

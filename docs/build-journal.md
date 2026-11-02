@@ -195,3 +195,38 @@ docs/specs/ (b1784a4). No app code changed.
 - M2: the leak lookup table in results-page-approved.md still has a One-channel dependence row,
   which can no longer be used, and has no copy for topLeak "none". NetGuard IT and Shield Pest
   Control both land on "none", so the page needs copy for that case.
+
+## 2026-11-02: Step 4, tests against the 20 simulated businesses
+
+**Built**
+- tests/fixtures/generate-cost-model-cases.py: loads the cost model .py unchanged, maps persona
+  values to option ids (an unmapped value raises an error) and writes cost-model-cases.json.
+- src/scorecard/engine/cost-model.test.ts: all 20 businesses against run2(), plus the brief's
+  four spot checks hardcoded, so a bad regeneration cannot pass unnoticed.
+- engine.test.ts: caps (each end capped on its own), top two leaks only, half-even rounding
+  through the engine, the hidden threshold, stored scores at 39/40 and 69/70, and the extremes.
+- Tests: 105 passing. Engine and tables unchanged. All 20 businesses matched on the first run.
+
+**Why these choices**
+- Every persona's Q1 pick is growth_stalled because the personas have no Q1 answers and
+  validation requires one. It matches neither no-dollar-leak candidate, so it cannot decide a
+  tie. The fixtures therefore do not test the Q1 tie-break; engine.test.ts does.
+- Hidden threshold tests use $480 (hidden) and $510 (shown). Both round to $500 a month, so
+  they lock the Step 3 decision to compare the unrounded high.
+
+**Checks beyond the test run**
+- The generator run twice gives an identical file.
+- The fixtures match the spec's 20-business table in cost-model-and-simulation.md (monthly or
+  hours range, #1 leak, share of revenue): 20 of 20, no differences.
+- Nine deliberate breaks were all caught, then reverted: a lift value, both caps, the hidden
+  threshold, an hours value, a band boundary, the retention multiplier, testing the rounded
+  high, and removing topOnlyWhenAlone.
+
+**Anything Tom needs to know**
+- None of the 20 businesses is in the hidden case (18 dollars, 2 hours), so only the unit tests
+  cover it. That is not a gap in the fixtures' accuracy, but the simulation never exercised it.
+- The cap binds so often that raising same_day's high-end lift from 30% to 31% changed only 2
+  tests. This matches the spec's finding that business size, not the lift table, drives most
+  numbers.
+- run2() does not compute stored scores, so those are checked against the brief's formula by
+  hand-worked unit tests, not against the Python model.

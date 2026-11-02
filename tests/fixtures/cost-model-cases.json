@@ -1,0 +1,688 @@
+[
+  {
+    "name": "Mike's Mobile Plumbing",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "organic_search"
+      ],
+      "monthly_leads": "10_25",
+      "response_speed": "varies",
+      "follow_up_attempts": "once_or_none",
+      "close_rate": "4_5",
+      "customer_value": "500_2k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "quotes",
+        "scheduling",
+        "admin"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 600.0,
+      "hi": 1200.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Lens & Light Photography",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "social_media"
+      ],
+      "monthly_leads": "under_10",
+      "response_speed": "same_day",
+      "follow_up_attempts": "2_3",
+      "close_rate": "2_3",
+      "customer_value": "2k_10k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_2",
+      "time_sinks": [
+        "followup",
+        "admin"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 400.0,
+      "hi": 800.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Clear Path Coaching",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "social_media",
+        "referrals"
+      ],
+      "monthly_leads": "under_10",
+      "response_speed": "1_hour",
+      "follow_up_attempts": "2_3",
+      "close_rate": "2_3",
+      "customer_value": "2k_10k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_3",
+      "time_sinks": [
+        "followup",
+        "onboarding"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 300.0,
+      "hi": 700.0,
+      "plo": 15,
+      "phi": 28,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Hartley Realty",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "paid_ads",
+        "referrals",
+        "social_media"
+      ],
+      "monthly_leads": "25_50",
+      "response_speed": "1_hour",
+      "follow_up_attempts": "4_6",
+      "close_rate": "0_1",
+      "customer_value": "10k_50k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_2",
+      "time_sinks": [
+        "leads",
+        "followup",
+        "crm"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 2900.0,
+      "hi": 5700.0,
+      "plo": 8,
+      "phi": 15,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Ledger Bookkeeping",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals"
+      ],
+      "monthly_leads": "under_10",
+      "response_speed": "same_day",
+      "follow_up_attempts": "once_or_none",
+      "close_rate": "4_5",
+      "customer_value": "2k_10k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_2",
+      "time_sinks": [
+        "admin",
+        "onboarding"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 800.0,
+      "hi": 1700.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Summit Farmers Agency",
+    "surveyVersion": "insurance",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "paid_ads",
+        "partners"
+      ],
+      "monthly_leads": "50_100",
+      "response_speed": "1_hour",
+      "follow_up_attempts": "2_3",
+      "close_rate": "2_3",
+      "customer_value": "500_2k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "quotes",
+        "crm",
+        "followup"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 2800.0,
+      "hi": 5400.0,
+      "plo": 15,
+      "phi": 28,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Wasatch Wealth Partners",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "partners"
+      ],
+      "monthly_leads": "10_25",
+      "response_speed": "same_day",
+      "follow_up_attempts": "2_3",
+      "close_rate": "4_5",
+      "customer_value": "2k_10k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_2",
+      "time_sinks": [
+        "crm",
+        "reporting",
+        "onboarding"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 2400.0,
+      "hi": 4800.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Bright Smile Dental",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "organic_search",
+        "paid_ads",
+        "referrals"
+      ],
+      "monthly_leads": "50_100",
+      "response_speed": "1_hour",
+      "follow_up_attempts": "2_3",
+      "close_rate": "4_5",
+      "customer_value": "500_2k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "scheduling",
+        "admin",
+        "followup"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 2200.0,
+      "hi": 4200.0,
+      "plo": 15,
+      "phi": 28,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Glow Med Spa",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "social_media",
+        "paid_ads"
+      ],
+      "monthly_leads": "50_100",
+      "response_speed": "same_day",
+      "follow_up_attempts": "2_3",
+      "close_rate": "2_3",
+      "customer_value": "500_2k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_2",
+      "time_sinks": [
+        "leads",
+        "scheduling",
+        "followup"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 1300.0,
+      "hi": 2600.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Great Install LLC",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "paid_ads"
+      ],
+      "monthly_leads": "25_50",
+      "response_speed": "same_day",
+      "follow_up_attempts": "2_3",
+      "close_rate": "2_3",
+      "customer_value": "2k_10k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_2",
+      "time_sinks": [
+        "followup",
+        "quotes",
+        "crm"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 2600.0,
+      "hi": 5200.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Peak Roofing",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "paid_ads",
+        "referrals",
+        "partners"
+      ],
+      "monthly_leads": "50_100",
+      "response_speed": "same_day",
+      "follow_up_attempts": "once_or_none",
+      "close_rate": "2_3",
+      "customer_value": "10k_50k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "quotes",
+        "followup",
+        "scheduling"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 26200.0,
+      "hi": 52500.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Benson & Cole Law",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "paid_ads",
+        "organic_search",
+        "referrals"
+      ],
+      "monthly_leads": "25_50",
+      "response_speed": "15_min",
+      "follow_up_attempts": "4_6",
+      "close_rate": "2_3",
+      "customer_value": "10k_50k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "crm_connected",
+      "ai_level": "level_3",
+      "time_sinks": [
+        "onboarding",
+        "admin",
+        "reporting"
+      ]
+    },
+    "expected": {
+      "top": "untapped_database",
+      "lo": 2200.0,
+      "hi": 4400.0,
+      "plo": 3,
+      "phi": 6,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Tally CPA Group",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals"
+      ],
+      "monthly_leads": "10_25",
+      "response_speed": "1_2_days",
+      "follow_up_attempts": "once_or_none",
+      "close_rate": "6_plus",
+      "customer_value": "2k_10k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "admin",
+        "onboarding",
+        "followup"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 3600.0,
+      "hi": 7100.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Spark Digital Agency",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "outbound",
+        "social_media"
+      ],
+      "monthly_leads": "10_25",
+      "response_speed": "same_day",
+      "follow_up_attempts": "4_6",
+      "close_rate": "2_3",
+      "customer_value": "10k_50k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "crm_connected",
+      "ai_level": "level_4",
+      "time_sinks": [
+        "reporting",
+        "quotes",
+        "onboarding"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 6000.0,
+      "hi": 11600.0,
+      "plo": 18,
+      "phi": 34,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Evergreen Landscaping",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "organic_search"
+      ],
+      "monthly_leads": "25_50",
+      "response_speed": "1_2_days",
+      "follow_up_attempts": "once_or_none",
+      "close_rate": "4_5",
+      "customer_value": "2k_10k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_0",
+      "time_sinks": [
+        "quotes",
+        "scheduling",
+        "admin"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 5200.0,
+      "hi": 10400.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Shield Pest Control",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "paid_ads",
+        "organic_search",
+        "partners",
+        "referrals"
+      ],
+      "monthly_leads": "100_plus",
+      "response_speed": "5_min",
+      "follow_up_attempts": "7_plus",
+      "close_rate": "4_5",
+      "customer_value": "500_2k",
+      "old_leads": "regular",
+      "lead_tracking": "crm_connected",
+      "ai_level": "level_3",
+      "time_sinks": [
+        "scheduling",
+        "reporting",
+        "admin"
+      ]
+    },
+    "expected": {
+      "top": "hours",
+      "lo": 4,
+      "hi": 9,
+      "plo": 0,
+      "phi": 0,
+      "status": "hours"
+    }
+  },
+  {
+    "name": "Ridgeline Custom Homes",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "organic_search"
+      ],
+      "monthly_leads": "10_25",
+      "response_speed": "same_day",
+      "follow_up_attempts": "2_3",
+      "close_rate": "0_1",
+      "customer_value": "50k_plus",
+      "old_leads": "rarely_never",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "quotes",
+        "followup",
+        "crm"
+      ]
+    },
+    "expected": {
+      "top": "slow_response",
+      "lo": 14900.0,
+      "hi": 29800.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "SunCore Solar",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "paid_ads",
+        "outbound",
+        "partners"
+      ],
+      "monthly_leads": "100_plus",
+      "response_speed": "1_hour",
+      "follow_up_attempts": "2_3",
+      "close_rate": "0_1",
+      "customer_value": "10k_50k",
+      "old_leads": "now_and_then",
+      "lead_tracking": "crm_fuzzy",
+      "ai_level": "level_3",
+      "time_sinks": [
+        "leads",
+        "quotes",
+        "crm"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 17400.0,
+      "hi": 33600.0,
+      "plo": 15,
+      "phi": 28,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "Sparkle Home Cleaning",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "paid_ads",
+        "organic_search",
+        "referrals"
+      ],
+      "monthly_leads": "50_100",
+      "response_speed": "varies",
+      "follow_up_attempts": "once_or_none",
+      "close_rate": "4_5",
+      "customer_value": "2k_10k",
+      "old_leads": "rarely_never",
+      "lead_tracking": "spreadsheet_inbox",
+      "ai_level": "level_1",
+      "time_sinks": [
+        "scheduling",
+        "leads",
+        "admin"
+      ]
+    },
+    "expected": {
+      "top": "short_follow_up",
+      "lo": 10500.0,
+      "hi": 21000.0,
+      "plo": 18,
+      "phi": 35,
+      "status": "shown"
+    }
+  },
+  {
+    "name": "NetGuard IT",
+    "surveyVersion": "general",
+    "answers": {
+      "challenges": [
+        "growth_stalled"
+      ],
+      "lead_channels": [
+        "referrals",
+        "outbound",
+        "partners"
+      ],
+      "monthly_leads": "under_10",
+      "response_speed": "5_min",
+      "follow_up_attempts": "7_plus",
+      "close_rate": "4_5",
+      "customer_value": "10k_50k",
+      "old_leads": "regular",
+      "lead_tracking": "crm_connected",
+      "ai_level": "level_4",
+      "time_sinks": [
+        "quotes",
+        "reporting",
+        "onboarding"
+      ]
+    },
+    "expected": {
+      "top": "hours",
+      "lo": 6,
+      "hi": 10,
+      "plo": 0,
+      "phi": 0,
+      "status": "hours"
+    }
+  }
+]

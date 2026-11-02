@@ -336,3 +336,26 @@ docs/specs/ (b1784a4). No app code changed.
 - Editing questions.ts, submission.ts or the engine now needs a sync and a redeploy of
   scorecard-submit, or the server scores with old rules. --check catches this; nothing runs it
   automatically.
+
+**Deployed and live-checked (2026-11-02)**
+- Migration 004 applied by Tom and verified: column_count = 34, ip_index = 1. scorecard-submit
+  deployed (version 1) from m1-scorecard-storage at 9ffe42c, which is not merged to main. Tom's
+  CLAUDE.md wording covering insuranceLabel is approved.
+- ip_hash confirmed keyed: HMAC-SHA-256 with the runtime's service role key. Nothing plain-hashes
+  the IP, so no dedicated secret was added. A dedicated key would be cleaner but is not needed.
+- All 19 stage 1 checks passed on the live endpoint: CORS, disallowed origins, validation, size
+  limit, honeypot, and a replay returning the identical response.
+- Faking the IP did not work with any header tried. Ten requests with a different fake
+  x-forwarded-for each still tripped the limit on request 10 (1 earlier row + 9 new). Two-value,
+  IPv6 and garbage x-forwarded-for, x-real-ip, true-client-ip and forwarded all got 429.
+  cf-connecting-ip got 403 from Cloudflare. A saved session replayed over the limit got 200.
+- The checks created 10 test rows. Over-limit requests wrote nothing.
+
+**Still unproven, must be settled before production**
+- Whether the limit is really per visitor. The results would look the same if the platform gave
+  every visitor one shared value, which would cap the whole site at 10 leads an hour. IPv4 and
+  IPv6 from this machine leave from the same public address, so they could not test this. It
+  needs a submission from another network, with a different ip_hash on its row.
+- Slack delivery of lead_created. The Slack connector cannot see the channel or the messages, so
+  this needs Tom's eyes on #ai-alerts and the assessment.events query.
+- The is_test = false path on the live endpoint: first check at production launch in M2.

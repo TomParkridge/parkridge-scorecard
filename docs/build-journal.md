@@ -476,3 +476,35 @@ Step 3.
 - Landing page redesign: its own short brief, once Tom has drafted the copy in chat. It ships before
   launch and is not part of M2a or M2b.
 - Tom keeps m2-parking-lot.md updated in his project, so the copy in docs/specs is not edited here.
+
+## 2026-11-05: M2a Step 2, Google Sheets v2
+
+**Built**
+- docs/apps-script/Code.original.gs: the live script, as Tom pasted it. No secrets or IDs in it.
+- docs/apps-script/Code.gs: the replacement. It neutralizes formula injection, builds the report link
+  safely, and adds v2 columns 27 to 51. Columns 1-26 keep their keys and rules.
+- docs/apps-script/appsScript.test.js: runs both real files against a fake sheet that runs formulas,
+  honours apostrophes and fails past the last column.
+- src/scorecard/sheetPayload.ts and App.jsx: sendToSheet sends v2 keys with readable answer labels.
+  Sheet score is now the engine's overall score. report_url stays until Step 4.
+
+**What reading the script added to the plan**
+- A default sheet stops at column Z, and writing column 27 throws. Code.gs adds the columns and
+  headers, on v2 posts only, so production's old-format posts never trigger it.
+- setValue would turn an array like ["=1+1"] back into a formula, so objects and arrays are written as
+  JSON text first. A strings-only check would have missed this.
+- The apostrophe also applies to session_id. getValues returns the text without it, so upserts still
+  match; this is tested.
+- Tab, carriage return and newline are neutralized too, beyond the brief's four characters.
+- The report link formula is only built for https://scorecard.parkridgeadvisory.com/, with quotes
+  escaped. Anything else, including preview URLs, is written as plain text.
+- Backward compatibility holds cell for cell against recorded payloads from main and /insurance. The
+  keys the live script already drops (q4_marketing_spend, q8b_deals_closed_90d and most insurance
+  keys) are still dropped, on purpose.
+
+**Anything Tom needs to know**
+- NOT LIVE YET. Tom pastes Code.gs and deploys it as a new version of the same deployment.
+- The fake sheet models Google Sheets; it is not Google Sheets. The live check after the deploy is the
+  real proof.
+- Noticed, not changed: the script has no lock, so two posts arriving at the same moment could pick
+  the same new row. This is how it behaves today and is outside the brief.

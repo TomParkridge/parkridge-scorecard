@@ -5,6 +5,7 @@ import { QUESTIONS, OTHER_OPTION_ID, OTHER_TEXT_KEY, OTHER_TEXT_MAX, HONEYPOT_FI
 import { sendSubmission } from "./scorecard/submit";
 import { captureTraffic } from "./scorecard/traffic";
 import { computeScorecard } from "./scorecard/engine";
+import { sheetAnswerColumns, sheetResultColumns } from "./scorecard/sheetPayload";
 import TemporaryResultsStub from "./scorecard/TemporaryResultsStub";
 import { isProduction } from "./scorecard/env";
 
@@ -1047,36 +1048,13 @@ export default function App() {
 
   // Send data to Google Sheet (updates same row using session_id)
   const sendToSheet = (extraData = {}) => {
-    const q = QUESTIONS[currentQ];
-    const val = answers[q?.id];
-
-    // Map answers to sheet columns
     const payload = {
       session_id: sessionId,
       timestamp: new Date().toISOString(),
       completed: false,
+      is_test: !isProduction(),
+      ...sheetAnswerColumns(answers),
     };
-
-    // Add all answered questions
-    if (answers.challenge) payload.q1_challenge = answers.challenge;
-    if (answers.tried) payload.q2_tried = answers.tried;
-    if (answers.lead_sources) payload.q3_lead_sources = Array.isArray(answers.lead_sources) ? answers.lead_sources.join(", ") : answers.lead_sources;
-    if (answers.marketing_spend !== undefined) payload.q4_marketing_spend = QUESTIONS.find(q => q.id === "marketing_spend")?.options[answers.marketing_spend] || "";
-    if (answers.cpl_cac !== undefined) payload.q5_cpl_cac = QUESTIONS.find(q => q.id === "cpl_cac")?.options[answers.cpl_cac] || "";
-    if (answers.cpl_cac_input_0) payload.q5_cpl_value = answers.cpl_cac_input_0;
-    if (answers.cpl_cac_input_1) payload.q5_cac_value = answers.cpl_cac_input_1;
-    if (answers.who_sells !== undefined) payload.q6_who_sells = QUESTIONS.find(q => q.id === "who_sells")?.options[answers.who_sells] || "";
-    if (answers.follow_up_speed !== undefined) payload.q7_follow_up_speed = QUESTIONS.find(q => q.id === "follow_up_speed")?.options[answers.follow_up_speed] || "";
-    if (answers.sales_process !== undefined) payload.q8_sales_process = QUESTIONS.find(q => q.id === "sales_process")?.options[answers.sales_process] || "";
-    if (answers.deals_closed_90d !== undefined) payload.q8b_deals_closed_90d = QUESTIONS.find(q => q.id === "deals_closed_90d")?.options[answers.deals_closed_90d] || "";
-    if (answers.conversion_rate !== undefined) payload.q9_conversion_rate = QUESTIONS.find(q => q.id === "conversion_rate")?.options[answers.conversion_rate] || "";
-    if (answers.conversion_rate_input_0) payload.q9_conversion_value = answers.conversion_rate_input_0;
-    if (answers.deal_falloff) payload.q10_deal_falloff = Array.isArray(answers.deal_falloff) ? answers.deal_falloff.join(", ") : answers.deal_falloff;
-    if (answers.crm !== undefined) payload.q11_crm = QUESTIONS.find(q => q.id === "crm")?.options[answers.crm] || "";
-    if (answers.business_type) payload.q12_business_type = answers.business_type;
-    if (answers.years !== undefined) payload.q13_years = QUESTIONS.find(q => q.id === "years")?.options[answers.years] || "";
-    if (answers.revenue !== undefined) payload.q14_revenue = QUESTIONS.find(q => q.id === "revenue")?.options[answers.revenue] || "";
-    if (answers.deal_size !== undefined) payload.q15_deal_size = QUESTIONS.find(q => q.id === "deal_size")?.options[answers.deal_size] || "";
 
     // Merge any extra data (email, score, completed flag)
     Object.assign(payload, extraData);
@@ -1172,12 +1150,14 @@ export default function App() {
     const revenue = calcRevenueLeak(answers);
 
     setResults({ score: totalScore, maxScore, leaks: leakScores, revenue, benchmarks });
-    // Temporary (M1): the engine result for the preview stub. Removed with the stub in M2.
+    // The stub is temporary (M1), removed in M2a Step 4. The Sheet uses the same result.
+    let engineResult = null;
     try {
-      setStubResult(computeScorecard(answers, "general"));
+      engineResult = computeScorecard(answers, "general");
     } catch {
-      setStubResult(null);
+      // Show the failure on the stub; the Sheet still gets the answers
     }
+    setStubResult(engineResult);
     setScreen("results");
 
     // Send final data with email, score, and completed flag
@@ -1269,9 +1249,10 @@ export default function App() {
       first_name: emailData.firstName,
       email: emailData.email,
       company: emailData.company,
-      score: displayScore,
+      score: engineResult?.overallScore,
       completed: true,
       report_url: reportUrl.toString(),
+      ...(engineResult ? sheetResultColumns(engineResult) : {}),
     });
 
     // Save to Supabase, in the background. The server recomputes every score from the answers.

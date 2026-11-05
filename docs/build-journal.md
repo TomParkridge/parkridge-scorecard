@@ -390,6 +390,12 @@ docs/specs/ (b1784a4). No app code changed.
 - Check the old links, not verified in M1: /old/path lands on the quiz, /insurance loads (do not
   submit it on preview), /?mp_id=test lands on the quiz, and a real report_url from the Sheet (from
   /?r=1 onward) shows the old report.
+- First check after launch: on /results/<token>, DevTools shows no requests to Meta, HubSpot or
+  Mixpanel. Trackers are off on preview, so this can only be checked on production.
+- Add the new HubSpot properties as hidden fields on the form before the code sending them goes
+  live. A field missing from the form makes HubSpot reject the whole submission.
+- Set VITE_EMAILJS_SNAPSHOT_TEMPLATE_ID in Vercel, and check the EmailJS plan covers the volume
+  (Free is 200 emails a month).
 
 ## 2026-11-02: Step 7, old links, temporary results stub and test script
 
@@ -436,3 +442,35 @@ all showed the expected screens and database rows.
 - The temporary results stub stays on preview until M2 replaces it, and every item on the pre-launch
   list above still applies. M1 ships to production only with M2.
 - The live scorecard-submit function was deployed from m1-scorecard-storage, which is not merged.
+
+# M2a: the AI Revenue Snapshot
+
+## 2026-11-05: M2a Step 1, inspect and plan
+
+**Built:** nothing. Specs committed (856a092). Plan for Steps 2 to 7 approved by Tom.
+
+**What the inspection found beyond the brief**
+- Meta Pixel, HubSpot tracking and Mixpanel would each receive a working private link on
+  /results/<token>. They watch URL changes too, so the plan keeps them off that path and does a
+  full page load to it after submit, with no-referrer and noindex headers.
+- Only the token's hash is stored, so a retried submission whose first response was lost gets
+  success but no token. That visitor's Snapshot renders in the browser with no Share button.
+- main and /insurance use the current EmailJS template, so M2a needs a new one. benchmarks_html
+  implies the current template has an unescaped HTML slot that the public key lets anyone fill.
+- The EmailJS domain whitelist is not on the Free plan, per its pricing page. Tom's plan is unknown.
+- HubSpot rejects a whole submission if a field is not on the form, and the current call ignores
+  the response, so that failure would be silent.
+- The approved 72px number does not fit larger figures, so it steps down by length.
+- The report_url HYPERLINK in the Apps Script is injectable even after the apostrophe fix.
+- The Apps Script source is not saved anywhere, so Step 2 starts by getting it from Tom.
+
+**Spec mismatches, resolved in the plan**
+- Five leak rows, not six: One-channel was removed on Nov 2 and the engine cannot return it.
+- M1 test path B is the "none" state, so a new path D covers hours with a leak.
+- Share logging goes to assessment.events (brief), not HubSpot (approved spec).
+- The other four leaks need 12 card icons that the reference does not include.
+
+**Decisions:** Tom approved the plan without changing it, so its recommendations stand: copy A, B, C
+and the blank-company wording, trackers off on /results/* with a full page load, the contact-step
+line change, and the dedicated ip_hash key in Step 3. Which brief owns the landing page redesign is
+still open.

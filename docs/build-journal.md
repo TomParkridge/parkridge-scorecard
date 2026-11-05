@@ -387,6 +387,9 @@ docs/specs/ (b1784a4). No app code changed.
 - First check after launch: HubSpot receives a real submission. It is off on preview by design, so
   M1 could only confirm by diff that the call is unchanged from main.
 - Remove the temporary results stub (TemporaryResultsStub.jsx, testScriptPaths.ts and their tests).
+- Check the old links, not verified in M1: /old/path lands on the quiz, /insurance loads (do not
+  submit it on preview), /?mp_id=test lands on the quiz, and a real report_url from the Sheet (from
+  /?r=1 onward) shows the old report.
 
 ## 2026-11-02: Step 7, old links, temporary results stub and test script
 
@@ -418,18 +421,18 @@ all showed the expected screens and database rows.
 | Item | Status |
 |---|---|
 | General version runs on preview | Met: runs A, B and C |
-| Finishes in under 3 minutes | Script passed; Tom did not report the time separately |
+| Finishes in under 3 minutes | Met: Tom timed it (confirmed 2026-11-05) |
 | One row per submission with estimate, top leak, survey_version general and traffic source | Met: Tom checked the rows for A, B and C |
 | All 20 fixture cases and the extra unit tests pass | Met: 145 tests pass on 2026-11-05 |
-| Old links still land | Script passed; Tom did not name this check separately |
-| Google Sheets still receives submissions | Script passed; Tom did not name this check separately. v2 rows hold no answers yet (pre-launch list) |
+| Old links still land | NOT VERIFIED: Tom has not checked /old/path or /insurance yet, and the ?r=1 and ?mp_id checks were not reported (pre-launch list). Expected to land from the code, not proven |
+| Google Sheets still receives submissions | Met: the three test runs arrived in the Sheet (confirmed 2026-11-05). v2 rows hold no answers yet (pre-launch list) |
 | HubSpot still receives submissions | Not provable in M1: off on preview by design. Call unchanged from main except indentation. First check after launch (pre-launch list) |
 | Journal entry per step, including the non-dollar leak rule | Met |
 | Nothing merged or pushed to main | Met: origin/main still eb74a72 in this repo and 62516be in the paid repo |
 
 **Carried forward**
-- Slack: 10 lead_created events and 0 slack_failed rows show the webhook accepted the posts. Whether
-  the 10 TEST messages appear in #ai-alerts is still unconfirmed by Tom.
+- Slack: confirmed by Tom on 2026-11-05. The TEST messages are in #ai-alerts, which closes the item
+  left open in Step 6.
 - The temporary results stub stays on preview until M2 replaces it, and every item on the pre-launch
   list above still applies. M1 ships to production only with M2.
 - The live scorecard-submit function was deployed from m1-scorecard-storage, which is not merged.

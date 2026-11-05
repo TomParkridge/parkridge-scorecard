@@ -470,7 +470,9 @@ all showed the expected screens and database rows.
 - Share logging goes to assessment.events (brief), not HubSpot (approved spec).
 - The other four leaks need 12 card icons that the reference does not include.
 
-**Decisions:** Tom approved the plan without changing it, so its recommendations stand: copy A, B, C
-and the blank-company wording, trackers off on /results/* with a full page load, the contact-step
-line change, and the dedicated ip_hash key in Step 3. Which brief owns the landing page redesign is
-still open.
+**Decisions (confirmed by Tom):** copy A, B, C and the blank-company wording, trackers off on
+/results/* with a full page load, the contact-step line change, and the dedicated ip_hash key in
+Step 3.
+- Landing page redesign: its own short brief, once Tom has drafted the copy in chat. It ships before
+  launch and is not part of M2a or M2b.
+- Tom keeps m2-parking-lot.md updated in his project, so the copy in docs/specs is not edited here.
